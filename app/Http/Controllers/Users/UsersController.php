@@ -22,7 +22,7 @@ class UsersController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['']]); //
+        $this->middleware('auth:api', ['except' => ['']]);
     }
     public function OfType($type)
     {
