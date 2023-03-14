@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Units;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\CMS\Entities\Units;
+use App\Models\Entities\Units;
 use DataTables;
 use Exception;
 use Illuminate\Support\Facades\Validator;
@@ -12,7 +12,7 @@ use DB;
 use App\Helpers\Helper;
 use App\Models\User;
 use Keygen\Keygen;
-use Modules\CMS\Entities\Categories;
+use App\Models\Entities\Categories;
 
 class UnitsController extends Controller
 {

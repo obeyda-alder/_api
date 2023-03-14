@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Categories;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\CMS\Entities\Categories;
+use App\Models\Entities\Categories;
 use DataTables;
 use Exception;
 use Illuminate\Support\Facades\Validator;

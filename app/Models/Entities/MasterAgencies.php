@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\CMS\Entities;
+namespace App\Models\Entities;
 
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Illuminate\Database\Eloquent\Model;
