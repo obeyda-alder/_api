@@ -20,7 +20,7 @@ class AgenciesController extends Controller
 
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['']]);
+        $this->middleware('jwt.auth', ['except' => ['']]);
     }
     public function OfType($agencies_type)
     {

@@ -17,6 +17,7 @@ class User extends Authenticatable implements JWTSubject
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
+        'id',
         'type',
         'name',
         'username',
@@ -32,6 +33,9 @@ class User extends Authenticatable implements JWTSubject
         'neighborhood_id',
         'registration_type',
         'social_id',
+        'deleted_at',
+        'created_at',
+        'updated_at',
     ];
 
     protected $hidden = [
@@ -42,6 +46,29 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function isApproved()
+    {
+        if( !in_array( $this->type,  config('custom.users_type') ) )
+            return false;
+
+        return $this->status == 'ACTIVE';
+    }
+    public function isRegistered()
+    {
+        return true;
+        return $this->registered != 0;
+    }
+    public function isVerified()
+    {
+        if( !in_array( $this->type, config('custom.users_type') ) )
+            return false;
+
+        // if( static::$availableTypes[ $this->type ]['require_activation'] )
+        // {
+        //     return $this->verification_code == 'VERIFIED';
+        // }
+        return true;
+    }
     public function scopeNotRegistered( $query )
     {
         return $query->whereNull('email');

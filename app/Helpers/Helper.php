@@ -78,15 +78,15 @@ trait Helper {
         $image->move($destinationPath.'original/', $extension);
         return $extension;
     }
-    public function getImgByFileName($folder, $imgName , $size = '/origin/')
+    public function getImgByFileName($folder, $imgName , $size = '/original/')
     {
         return asset('/uploads/'.$folder.$size.$imgName);
     }
-    public function deleteImgByFileName($folder, $imgName , $size = '/origin/')
+    public function deleteImgByFileName($folder, $imgName , $size = '/original/')
     {
-        if(File::exists('/uploads/'.$folder.$size.$imgName))
+        if(File::exists(public_path('/uploads/'.$folder.$size.$imgName)))
         {
-            File::delete('/uploads/'.$folder.$size.$imgName);
+            File::delete(public_path('/uploads/'.$folder.$size.$imgName));
         }
     }
 }

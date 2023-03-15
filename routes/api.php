@@ -24,16 +24,20 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
     });
 
     Route::group(['prefix' => 'auth', 'namespace' => 'Auth'], function () {
-        Route::post('login', 'AuthController@login');
+        Route::post('login', 'AuthController@login')->name('cms::login');
+        Route::post('refresh', 'AuthController@refresh');
+        Route::post('register', 'AuthController@register');
         Route::post('logout', 'AuthController@logout');
     });
 
-    Route::group(['middleware' => ['jwt.auth', 'ofType:ROOT,ADMINS,EMPLOYEES']], function ($router) {
+    Route::group(['middleware' => 'ofType:ROOT,ADMINS,EMPLOYEES'], function ($router) {
         Route::group(['prefix' => 'users/u/', 'namespace' => 'Users'], function(){
-            Route::get('auth_data', 'UsersController@UserData');
-            Route::get('all_users_data', 'UsersController@AllUsers');
+            Route::get('/edit/{id}', 'UsersController@UserData');
+            Route::get('/all_users_data', 'UsersController@AllUsers');
             Route::post('create', 'UsersController@store');
-            Route::get('edit/{id}/{type}', 'UsersController@show');
+            Route::post('update/{id}', 'UsersController@update');
+
+            //
             Route::post('e/store', 'UsersController@update');
             Route::post('soft_delete/{id}', 'UsersController@softDelete');
             Route::post('delete/{id}', 'UsersController@delete');

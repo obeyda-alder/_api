@@ -28,19 +28,19 @@ class UserTypesApiAuth
 
         foreach ($types as $key => $type) {
             if ( $type != 'GUEST' )
-                if ( $request->user()->isAn( $type ) ) return $next($request);
+                if ( $request->user()->type ==  $type  ) return $next($request);
 
         }
 
-        Redirect :
-        return response()->json([
-            'message'   => 'fail',
-            'data'      => [
-                'result'  => '',
-            ],
-            'errors'    => [
-                'global' => 'permission_denied'
-            ],
-        ],200);
+        Redirect : return $next($request);
+        // return response()->json([
+        //     'message'   => 'fail',
+        //     'data'      => [
+        //         'result'  => '',
+        //     ],
+        //     'errors'    => [
+        //         'global' => 'permission_denied'
+        //     ],
+        // ],200);
     }
 }

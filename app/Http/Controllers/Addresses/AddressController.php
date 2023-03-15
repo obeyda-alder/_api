@@ -16,7 +16,7 @@ class AddressController extends BaseController
 
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['']]);
+        $this->middleware('jwt.auth', ['except' => ['']]);
         $this->locale = app()->getLocale();
     }
     public function getCountries(Request $request)

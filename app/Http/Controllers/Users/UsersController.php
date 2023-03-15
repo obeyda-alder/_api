@@ -12,17 +12,18 @@ use Illuminate\Support\Facades\Validator;
 use DB;
 use Illuminate\Support\Facades\Hash;
 use App\Helpers\Helper;
+use App\Helpers\DataLists;
 use App\Models\AddressDetails\Country;
 
 class UsersController extends Controller
 {
-    use Helper;
+    use Helper, DataLists;
 
     protected $locale = 'ar';
 
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['']]);
+        $this->middleware('jwt.auth', ['except' => ['']]);
     }
     public function OfType($type)
     {
@@ -32,11 +33,11 @@ class UsersController extends Controller
             return $type;
         }
     }
-    public function UserData(Request $request)
+    public function UserData(Request $request, $id)
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -46,15 +47,14 @@ class UsersController extends Controller
              return response()->json($resulte, 400);
         }
 
+        $data = User::findOrFail($id);
+
         $type = $this->OfType(auth()->user()->type);
         if($type){
             $resulte              = [];
             $resulte['success']   = true;
             $resulte['message']   = __('cms.base.users_data');
-            $resulte['data']      = [
-                    'user'               => auth()->user(),
-                    'path_default_image' => $this->getImageDefaultByType('user')
-            ];
+            $resulte['data']      = $this->getUserData($data, false);
             return response()->json($resulte, 200);
 
         } else {
@@ -70,7 +70,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -90,7 +90,7 @@ class UsersController extends Controller
                 $data->where('type', '!=','ROOT');
             }
 
-            if($request->has('search') && !impty($request->search))
+            if($request->has('search') && !empty($request->search))
             {
                 $data->where(function($q) use ($request) {
                     $q->where('name', 'like', "%{$request->search['value']}%")
@@ -107,7 +107,8 @@ class UsersController extends Controller
             $resulte              = [];
             $resulte['success']   = true;
             $resulte['message']   = __('cms.base.successfully');
-            $resulte['data']      = $data->get();
+            $resulte['count']     = $data->count();
+            $resulte['data']      = $this->getUserData($data->get(), true);
             return response()->json($resulte, 200);
 
         } else {
@@ -123,7 +124,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -201,51 +202,44 @@ class UsersController extends Controller
             'description' => __('cms::base.msg.success_message.description'),
         ], 200);
     }
-    public function show(Request $request, $id)
+    public function update(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
-        {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
-        }
-        $user = User::find($id);
-        $defaultImage = $this->getImageDefaultByType('user');
-        $countries = $this->getCountry(app()->getLocale());
-        return view('cms::backend.users.update', [
-            'user'           => $user,
-            'countries'      => $countries,
-            'defaultImage'  => $defaultImage
-        ]);
-    }
-    public function update(Request $request)
-    {
-        dd($request->file('logo'));
+        $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+             return response()->json($resulte, 400);
         }
 
-        $UpdateUserValidator = [
-            'name'               => 'required|string|max:255',
-            'email'              => 'required|email|unique:users,id,'.$request->user_id,
-            'password'           => 'nullable|string|min:6|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
-        ];
-        $validator = Validator::make($request->all(), $UpdateUserValidator);
-        if(!$validator->fails())
-        {
+        $type = $this->OfType(auth()->user()->type);
+
+        if($type){
+            $validator = [
+                'name'               => 'required|string|max:255',
+                'email'              => 'required|email|unique:users,id,'.$request->user_id,
+                'password'           => 'nullable|string|min:6|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
+                'type'               => 'required|in:ADMINS,EMPLOYEES,CUSTOMERS,AGENCIES',
+                'image'              => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
+            ];
+
+            $validator = Validator::make($request->all(), $validator);
+
+            if ($validator->fails()) {
+                $resulte              = [];
+                $resulte['success']   = false;
+                $resulte['type']      = 'validations_error';
+                $resulte['errors']     = $validator->errors();
+                return response()->json($resulte, 400);
+            }
+
             try{
-                DB::transaction(function() use ($request) {
-                    $user                   = User::find($request->user_id);
+                DB::transaction(function() use ($request, $id) {
+                    $user                   = User::find($id);
                     $user->name             = $request->name;
                     $user->email            = $request->email;
                     $user->username         = $request->username;
@@ -257,6 +251,25 @@ class UsersController extends Controller
                     if($request->has('password') && !is_null($request->password)) {
                         $user->password  = Hash::make($request->password);
                     }
+
+                    if($request->has('status'))
+                    {
+                        $user->status = $request->status;
+                    }
+
+                    if(!is_null($user->image))
+                    {
+                        $this->deleteImgByFileName('users', $user->image); //[[0 => 100, 1 => 100],[0 => 50, 1 => 50]]
+                    }
+
+
+                    if($request->hasFile('image'))
+                    {
+                        $path =  $this->UploadWithResizeImage($request, 'users', [[0 => 100, 1 => 100],[0 => 50, 1 => 50]]);
+
+                        $user->image = $path;
+                    }
+
                     $user->save();
                 });
             }catch (Exception $e){
@@ -268,26 +281,18 @@ class UsersController extends Controller
                     'errors'      => '['. $e->getMessage() .']'
                 ], 500);
             }
-        }else {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'error',
-                'title'       => __('cms::base.msg.validation_error.title'),
-                'description' => __('cms::base.msg.validation_error.description'),
-                'errors'      => $validator->getMessageBag()->toArray()
-            ], 402);
         }
+
         return response()->json([
-            'success'       => true,
-            'type'          => 'success',
-            'title'         => __('cms::base.msg.success_message.title'),
-            'description'   => __('cms::base.msg.success_message.description'),
-            'redirect_url'  => route('cms::users', ['type' => $request->type])
+            'success'     => true,
+            'type'        => 'success',
+            'title'       => __('cms::base.msg.success_message.title'),
+            'description' => __('cms::base.msg.success_message.description'),
         ], 200);
     }
     public function softDelete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
             return response()->json([
                 'success'     => false,
@@ -318,7 +323,7 @@ class UsersController extends Controller
     }
     public function delete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
             return response()->json([
                 'success'     => false,
@@ -349,7 +354,7 @@ class UsersController extends Controller
     }
     public function restore(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
             return response()->json([
                 'success'     => false,
