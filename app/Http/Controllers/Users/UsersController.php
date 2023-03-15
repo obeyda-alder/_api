@@ -47,23 +47,30 @@ class UsersController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $data = User::findOrFail($id);
-
         $type = $this->OfType(auth()->user()->type);
+
         if($type){
-            $resulte              = [];
-            $resulte['success']   = true;
-            $resulte['message']   = __('cms.base.users_data');
-            $resulte['data']      = $this->getUserData($data, false);
-            return response()->json($resulte, 200);
+            try{
+                $data = User::findOrFail($id);
+                $resulte              = [];
+                $resulte['success']   = true;
+                $resulte['message']   = __('cms.base.users_data');
+                $resulte['data']      = $this->getUserData($data, false);
+                return response()->json($resulte, 200);
 
+            }catch(Exception $e){
+                $resulte              = [];
+                $resulte['success']   = false;
+                $resulte['type']      = 'user_not_found';
+                $resulte['data']      = $e->getMessage();
+                 return response()->json($resulte, 400);
+            }
         } else {
-
             $resulte              = [];
             $resulte['success']   = false;
             $resulte['type']      = 'user_type_error';
             $resulte['data']      = '';
-             return response()->json($resulte, 400);
+            return response()->json($resulte, 400);
         }
     }
     public function AllUsers(Request $request)
@@ -239,7 +246,7 @@ class UsersController extends Controller
 
             try{
                 DB::transaction(function() use ($request, $id) {
-                    $user                   = User::find($id);
+                    $user                   = User::findOrFail($id);
                     $user->name             = $request->name;
                     $user->email            = $request->email;
                     $user->username         = $request->username;

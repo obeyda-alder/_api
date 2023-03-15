@@ -32,13 +32,10 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
 
     Route::group(['middleware' => 'ofType:ROOT,ADMINS,EMPLOYEES'], function ($router) {
         Route::group(['prefix' => 'users/u/', 'namespace' => 'Users'], function(){
-            Route::get('/edit/{id}', 'UsersController@UserData');
-            Route::get('/all_users_data', 'UsersController@AllUsers');
+            Route::get('edit/{id}', 'UsersController@UserData');
+            Route::get('all_users_data', 'UsersController@AllUsers');
             Route::post('create', 'UsersController@store');
             Route::post('update/{id}', 'UsersController@update');
-
-            //
-            Route::post('e/store', 'UsersController@update');
             Route::post('soft_delete/{id}', 'UsersController@softDelete');
             Route::post('delete/{id}', 'UsersController@delete');
             Route::post('restore/{id}', 'UsersController@restore');
