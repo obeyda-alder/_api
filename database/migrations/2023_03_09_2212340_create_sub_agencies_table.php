@@ -30,20 +30,24 @@ class CreateSubAgenciesTable extends Migration
             $table->string('iban', 191)->nullable()->default(null);
             $table->string('iban_name', 191)->nullable()->default(null);
             $table->string('iban_type', 191)->nullable()->default(null);
-            $table->string('agent_type', 100);
             $table->string('phone_number', 100);
-            $table->unsignedInteger('sub_agencies_id');
+            $table->unsignedInteger('master_agencies_id');
             $table->string('status', 50)->default('ACTIVE')->comment('ACTIVE | SUSPENDED | PENDING');
             $table->softDeletes();
             $table->timestamps();
 
-            $table->index(["country_id"], 'sub_agent_country_id_index');
-            $table->index(["city_id"], 'sub_agen_city_id_index');
+
             $table->unique(["phone_number"], 'sub_agen_phone_number_unique');
             $table->unique(["email"], 'sub_agen_email_unique');
+
+            $table->index(["city_id"], 'sub_agen_city_id_index');
             $table->foreign('city_id', 'sub_agen_city_id_index')->references('id')->on('cities')->onDelete('set null')->onUpdate('restrict');
-            $table->foreign('country_id', 'sub_agen_country_id_index')->references('id')->on('countries')->onDelete('set null')->onUpdate('restrict');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+            $table->index(["country_id"], 'sub_agent_country_id_index');
+            $table->foreign('country_id', 'sub_agent_country_id_index')->references('id')->on('countries')->onDelete('set null')->onUpdate('restrict');
+
+            $table->index(["master_agencies_id"], 'sub_master_agencies_id_index');
+            $table->foreign('master_agencies_id', 'sub_master_agencies_id_index')->references('id')->on('master_agencies')->onDelete('cascade');
         });
     }
 

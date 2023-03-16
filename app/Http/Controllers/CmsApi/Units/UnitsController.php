@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Categories;
+namespace App\Http\Controllers\CmsApi\Units;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use App\Models\Entities\Categories;
+use App\Models\Entities\Units;
 use DataTables;
 use Exception;
 use Illuminate\Support\Facades\Validator;
@@ -12,8 +12,9 @@ use DB;
 use App\Helpers\Helper;
 use App\Models\User;
 use Keygen\Keygen;
+use App\Models\Entities\Categories;
 
-class CategoriesController extends Controller
+class UnitsController extends Controller
 {
     use Helper;
 
@@ -23,14 +24,28 @@ class CategoriesController extends Controller
     }
     public function generateCode($length = 10)
     {
-        $code = Keygen::numeric($length)->prefix('CA-')->generate();
+        $code = Keygen::numeric($length)->prefix('UN-')->generate();
 
-        if(Categories::where('code', $code)->exists())
+        if(units::where('code', $code)->exists())
         {
             return $this->generateCode($length);
         }
 
         return $code;
+    }
+    public function getCategory(Request $request)
+    {
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        {
+            return response()->json([
+                'success'     => false,
+                'type'        => 'permission_denied',
+                'title'       => __('cms::base.permission_denied.title'),
+                'description' => __('cms::base.permission_denied.description'),
+            ], 402);
+        }
+
+        return Categories::find($request->category_id);
     }
     public function index(Request $request)
     {
@@ -43,11 +58,11 @@ class CategoriesController extends Controller
                 'description' => __('cms::base.permission_denied.description'),
             ], 402);
         }
-        return view('cms::backend.categories.index');
+        return view('cms::backend.units.index');
     }
     public function data(Request $request)
     {
-        $data = Categories::orderBy('id', 'DESC')->withTrashed();
+        $data = Units::orderBy('id', 'DESC')->withTrashed();
 
         $data->get();
         return Datatables::of($data)
@@ -62,62 +77,62 @@ class CategoriesController extends Controller
             }
         })
         ->addIndexColumn()
-        ->addColumn('name', function ($category) {
-            return $category->name ?? '';
+        ->addColumn('name', function ($units) {
+            return $units->name ?? '';
         })
-        ->addColumn('code', function ($category) {
-            return $category->code ?? '';
+        ->addColumn('code', function ($units) {
+            return $units->code ?? '';
         })
-        ->addColumn('from_to', function ($category) {
-            return __('cms::base.categories.from_to', ['from' => $category->from, 'to' => $category->to]) ?? '';
+        ->addColumn('from_to', function ($units) {
+            return __('cms::base.units.from_to', ['from' => $units->from, 'to' => $units->to]) ?? '';
         })
-        ->addColumn('price', function ($category) {
-            return $category->price ?? '';
+        ->addColumn('price', function ($units) {
+            return $units->price ?? '';
         })
-        ->addColumn('status', function ($category) {
-            return $category->status ?? '';
+        ->addColumn('status', function ($units) {
+            return $units->status ?? '';
         })
-        ->addColumn('actions', function($category) use($request){
+        ->addColumn('actions', function($units) use($request){
             $actions   = [];
-            if($category->trashed()) {
+            if($units->trashed()) {
                 $actions[] = [
-                    'id'            => $category->id,
+                    'id'            => $units->id,
                     'label'         => __('cms::base.restore'),
                     'type'          => 'icon',
-                    'link'          => route('cms::categories::restore', ['id' => $category->id ]),
+                    'link'          => route('cms::units::restore', ['id' => $units->id ]),
                     'method'        => 'POST',
-                    'request_type'  => 'category_restore_'.$category->id,
+                    'request_type'  => 'units_restore_'.$units->id,
                     'class'         => 'restore-action',
                     'icon'          => 'fas fa-trash-restore'
                 ];
                 $actions[] = [
-                    'id'            => $category->id,
+                    'id'            => $units->id,
                     'label'         => __('cms::base.delete'),
                     'type'          => 'icon',
-                    'link'          => route('cms::categories::delete', ['id' => $category->id ]),
+                    'link'          => route('cms::units::delete', ['id' => $units->id ]),
                     'method'        => 'POST',
-                    'request_type'  => 'delete_'.$category->id,
+                    'request_type'  => 'delete_'.$units->id,
                     'class'         => 'delete-action',
                     'icon'          => 'fas fa-user-times'
                 ];
             } else {
                 $actions[] = [
-                    'id'            => $category->id,
+                    'id'            => $units->id,
                     'label'         => __('cms::base.soft_delete'),
                     'type'          => 'icon',
-                    'link'          => route('cms::categories::soft_delete', ['id' => $category->id ]),
+                    'link'          => route('cms::units::soft_delete', ['id' => $units->id ]),
                     'method'        => 'POST',
-                    'request_type'  => 'soft_delete_'.$category->id,
+                    'request_type'  => 'soft_delete_'.$units->id,
                     'class'         => 'soft-delete-action',
                     'icon'          => 'fas fa-trash'
                 ];
                 $actions[] = [
-                    'id'            => $category->id,
+                    'id'            => $units->id,
                     'label'         => __('cms::base.update'),
                     'type'          => 'icon',
-                    'link'          => route('cms::categories::edit', ['id' => $category->id ]),
+                    'link'          => route('cms::units::edit', ['id' => $units->id ]),
                     'method'        => 'GET',
-                    'request_type'  => 'update_'.$category->id,
+                    'request_type'  => 'update_'.$units->id,
                     'class'         => 'update-action',
                     'icon'          => 'fas fa-edit'
                 ];
@@ -138,8 +153,9 @@ class CategoriesController extends Controller
                 'description' => __('cms::base.permission_denied.description'),
             ], 402);
         }
-
-        return view('cms::backend.categories.create');
+        $users      = User::where('type', 'CUSTOMERS')->get();
+        $categories = Categories::get();
+        return view('cms::backend.units.create', ['users' => $users, 'categories' => $categories ]);
     }
     public function store(Request $request)
     {
@@ -154,12 +170,12 @@ class CategoriesController extends Controller
         }
 
         $userValidator = [
-            'name'    => 'required|string|max:255',
-            'code'    => 'required|string|max:255',
-            'from'    => 'required|numeric',
-            'to'      => 'required|numeric',
-            'price'   => 'required|numeric',
-            'status'  => 'required|in:ACTIVE,NOT_ACTIVE',
+            'name'        => 'required_if:units_type,=,new|string|max:255',
+            'code'        => 'required_if:units_type,=,new|string|max:255',
+            'price'       => 'required_if:units_type,=,new|numeric',
+            'status'      => 'required_if:units_type,=,new|in:ACTIVE,NOT_ACTIVE',
+            'user_id'     => 'required|exists:users,id',
+            'category_id' => 'required_if:units_type,=,from_categories', //exists:categories,id
         ];
 
         $validator = Validator::make($request->all(), $userValidator);
@@ -167,13 +183,19 @@ class CategoriesController extends Controller
         {
             try{
                 DB::transaction(function() use ($request) {
-                    $data = new Categories;
-                    $data->name    = $request->name;
-                    $data->code    = $request->code;
-                    $data->from    = $request->from;
-                    $data->to      = $request->to;
-                    $data->price   = $request->price;
-                    $data->status  = $request->status;
+                    $data = new units;
+                    if($request->units_type == 'new') {
+                        $set = $request;
+                    }else if($request->units_type == 'from_categories'){
+                        $cat = Categories::find($request->category_id);
+                        $set = $cat;
+                        $data->category_id = $request->category_id;
+                    }
+                    $data->name    = $set->name;
+                    $data->user_id = $request->user_id;
+                    $data->code    = $set->code;
+                    $data->price   = $set->price;
+                    $data->status  = $set->status;
                     $data->save();
                 });
             }catch (Exception $e){
@@ -199,7 +221,7 @@ class CategoriesController extends Controller
             'type'        => 'success',
             'title'       => __('cms::base.msg.success_message.title'),
             'description' => __('cms::base.msg.success_message.description'),
-            'redirect_url'  => route('cms::categories')
+            'redirect_url'  => route('cms::units')
         ], 200);
     }
     public function show(Request $request, $id)
@@ -213,8 +235,10 @@ class CategoriesController extends Controller
                 'description' => __('cms::base.permission_denied.description'),
             ], 402);
         }
-        $categories = Categories::find($id);
-        return view('cms::backend.categories.update', ['categories' => $categories]);
+        $users      = User::where('type', 'CUSTOMERS')->get();
+        $units      = units::find($id);
+        $categories = Categories::get();
+        return view('cms::backend.units.update', ['data' => $units, 'users' => $users , 'categories' => $categories ]);
     }
     public function update(Request $request)
     {
@@ -229,12 +253,12 @@ class CategoriesController extends Controller
         }
 
         $userValidator = [
-            'name'    => 'required|string|max:255',
-            'code'    => 'required|string|max:255',
-            'from'    => 'required|numeric',
-            'to'      => 'required|numeric',
-            'price'   => 'required|numeric',
-            'status'  => 'required|in:ACTIVE,NOT_ACTIVE',
+            'name'        => 'required_if:units_type,=,new|string|max:255',
+            'code'        => 'required_if:units_type,=,new|string|max:255',
+            'price'       => 'required_if:units_type,=,new|numeric',
+            'status'      => 'required_if:units_type,=,new|in:ACTIVE,NOT_ACTIVE',
+            'user_id'     => 'required|exists:users,id',
+            'category_id' => 'required_if:units_type,=,from_categories', //exists:categories,id
         ];
 
         $validator = Validator::make($request->all(), $userValidator);
@@ -242,13 +266,19 @@ class CategoriesController extends Controller
         {
             try{
                 DB::transaction(function() use ($request) {
-                    $data = Categories::find($request->cat_id);
-                    $data->name    = $request->name;
-                    $data->code    = $request->code;
-                    $data->from    = $request->from;
-                    $data->to      = $request->to;
-                    $data->price   = $request->price;
-                    $data->status  = $request->status;
+                    $data = units::find($request->unit_id);
+                    if($request->units_type == 'new') {
+                        $set = $request;
+                    }else if($request->units_type == 'from_categories'){
+                        $cat = Categories::find($request->category_id);
+                        $set = $cat;
+                        $data->category_id = $request->category_id;
+                    }
+                    $data->name    = $set->name;
+                    $data->user_id = $request->user_id;
+                    $data->code    = $set->code;
+                    $data->price   = $set->price;
+                    $data->status  = $set->status;
                     $data->save();
                 });
             }catch (Exception $e){
@@ -274,7 +304,7 @@ class CategoriesController extends Controller
             'type'        => 'success',
             'title'       => __('cms::base.msg.success_message.title'),
             'description' => __('cms::base.msg.success_message.description'),
-            'redirect_url'  => route('cms::categories')
+            'redirect_url'  => route('cms::units')
         ], 200);
 
     }
@@ -290,10 +320,10 @@ class CategoriesController extends Controller
             ], 402);
         }
 
-        $categories = Categories::withTrashed()->find($id);
+        $units = units::withTrashed()->find($id);
 
-        if(!is_null($categories)){
-            $categories->delete();
+        if(!is_null($units)){
+            $units->delete();
         } else {
             return response()->json([
                 'success'     => false,
@@ -322,10 +352,10 @@ class CategoriesController extends Controller
             ], 402);
         }
 
-        $categories = Categories::withTrashed()->find($id);
+        $units = units::withTrashed()->find($id);
 
-        if(!is_null($categories)){
-            $categories->forceDelete();
+        if(!is_null($units)){
+            $units->forceDelete();
         } else {
             return response()->json([
                 'success'     => false,
@@ -354,10 +384,10 @@ class CategoriesController extends Controller
             ], 402);
         }
 
-        $categories = Categories::withTrashed()->find($id);
+        $units = units::withTrashed()->find($id);
 
-        if(!is_null($categories)){
-            $categories->restore();
+        if(!is_null($units)){
+            $units->restore();
         } else {
             return response()->json([
                 'success'     => false,

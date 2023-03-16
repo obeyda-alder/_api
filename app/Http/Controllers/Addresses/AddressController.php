@@ -30,7 +30,7 @@ class AddressController extends BaseController
             $resulte['type']         = 'permission_denied';
             $resulte['title']        = __('cms::base.permission_denied.title');
             $resulte['description']  = __('cms::base.permission_denied.description');
-             return response()->json($resulte, 400);
+            return response()->json($resulte, 400);
         }
 
         return $this->getCountry($request, $this->locale);

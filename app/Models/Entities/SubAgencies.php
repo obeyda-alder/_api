@@ -11,6 +11,7 @@ use App\Models\AddressDetails\City;
 use App\Models\AddressDetails\Country;
 use App\Models\AddressDetails\Municipality;
 use App\Models\AddressDetails\Neighborhood;
+use App\Models\Entities\MasterAgencies;
 
 class SubAgencies extends Model implements TranslatableContract
 {
@@ -35,16 +36,18 @@ class SubAgencies extends Model implements TranslatableContract
         'iban',
         'iban_name',
         'iban_type',
-        'agent_type',
         'phone_number',
-        'master_agent_id',
+        'master_agencies_id',
         'status',
         'deleted_at',
         'created_at',
         'updated_at',
     ];
 
-
+    public function master()
+    {
+        return $this->belongsTo(MasterAgencies::class, 'master_agencies_id');
+    }
     public function country()
     {
         return $this->belongsTo(Country::class);

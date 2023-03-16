@@ -11,6 +11,8 @@ use App\Models\AddressDetails\Country;
 use App\Models\AddressDetails\Municipality;
 use App\Models\AddressDetails\Neighborhood;
 use Astrotomic\Translatable\Translatable;
+use App\Models\User;
+use App\Models\Entities\SubAgencies;
 
 class MasterAgencies extends Model implements TranslatableContract
 {
@@ -35,7 +37,6 @@ class MasterAgencies extends Model implements TranslatableContract
         'iban',
         'iban_name',
         'iban_type',
-        'agent_type',
         'phone_number',
         'user_id',
         'has_sub_agent',
@@ -46,6 +47,14 @@ class MasterAgencies extends Model implements TranslatableContract
         'updated_at',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    public function sub_agent()
+    {
+        return $this->hasMany(SubAgencies::class, 'master_agent_id', 'id');
+    }
     public function country()
     {
         return $this->belongsTo(Country::class);

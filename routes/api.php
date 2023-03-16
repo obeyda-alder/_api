@@ -23,7 +23,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
         Route::get('rollback', function(){    \Artisan::call('migrate:rollback', ['--step' => 1]); dd('done'); });
     });
 
-    Route::group(['prefix' => 'auth', 'namespace' => 'Auth'], function () {
+    Route::group(['prefix' => 'auth', 'namespace' => 'CmsApi\Auth'], function () {
         Route::post('login', 'AuthController@login')->name('cms::login');
         Route::post('refresh', 'AuthController@refresh');
         Route::post('register', 'AuthController@register');
@@ -31,7 +31,8 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
     });
 
     Route::group(['middleware' => 'ofType:ROOT,ADMINS,EMPLOYEES'], function ($router) {
-        Route::group(['prefix' => 'users/u/', 'namespace' => 'Users'], function(){
+
+        Route::group(['prefix' => 'users/u/', 'namespace' => 'CmsApi\Users'], function(){
             Route::get('edit/{id}', 'UsersController@UserData');
             Route::get('all_users_data', 'UsersController@AllUsers');
             Route::post('create', 'UsersController@store');
@@ -48,10 +49,40 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::get('get_Neighborhoodes', 'AddressController@getNeighborhoodes');
         });
 
-        Route::group(['prefix' => 'agencies', 'namespace' => 'Agencies'], function(){
-            Route::get('a/{agencies_type}', 'AgenciesController@index')->name('agencies');
-            Route::get('agencies_data', 'AgenciesController@data')->name('agencies::data');
-            Route::get('create/{agencies_type}', 'AgenciesController@create')->name('agencies::create');
+
+        Route::group(['prefix' => 'operations', 'namespace' => 'CmsApi\Categories'], function(){
+            Route::get('', 'OperationsController@index');
+            Route::post('create', 'OperationsController@create');
+            Route::post('delete/{id}', 'OperationsController@delete');
+        });
+
+
+        Route::group(['prefix' => 'operation_type', 'namespace' => 'CmsApi\Categories'], function(){
+            Route::get('', 'OperationTypeController@index');
+            Route::post('create', 'OperationTypeController@create');
+            Route::post('delete/{id}', 'OperationTypeController@delete');
+        });
+
+
+        Route::group(['prefix' => 'relations_type', 'namespace' => 'CmsApi\Categories'], function(){
+            Route::get('', 'RelationsTypeController@index');
+            Route::post('create', 'RelationsTypeController@create');
+            Route::post('delete/{id}', 'RelationsTypeController@delete');
+        });
+
+        Route::group(['prefix' => 'categories', 'namespace' => 'CmsApi\Categories'], function(){
+            Route::get('', 'CategoriesController@index');
+            Route::get('generate_code', 'CategoriesController@generateCode');
+            Route::post('create', 'CategoriesController@create');
+            Route::post('update/{id}', 'CategoriesController@update');
+            Route::post('soft_delete/{id}', 'CategoriesController@softDelete');
+            Route::post('delete/{id}', 'CategoriesController@delete');
+            Route::post('restore/{id}', 'CategoriesController@restore');
+        });
+
+        Route::group(['prefix' => 'agencies', 'namespace' => 'CmsApi\Agencies'], function(){
+            Route::get('/{type}', 'AgenciesController@index');
+            Route::post('create/{type}', 'AgenciesController@create');
             Route::post('store/{agencies_type}', 'AgenciesController@store')->name('agencies::store');
             Route::get('edit/{id}/{agencies_type}', 'AgenciesController@show')->name('agencies::edit');
             Route::post('e/store', 'AgenciesController@update')->name('agencies::e-store');
@@ -60,20 +91,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::post('restore/{id}', 'AgenciesController@restore')->name('agencies::restore');
         });
 
-        Route::group(['prefix' => 'categories', 'namespace' => 'Categories'], function(){
-            Route::get('', 'CategoriesController@index')->name('categories');
-            Route::get('generateCode', 'CategoriesController@generateCode')->name('categories::generateCode');
-            Route::get('categories_data', 'CategoriesController@data')->name('categories::data');
-            Route::get('create', 'CategoriesController@create')->name('categories::create');
-            Route::post('store', 'CategoriesController@store')->name('categories::store');
-            Route::get('edit/{id}', 'CategoriesController@show')->name('categories::edit');
-            Route::post('e/store', 'CategoriesController@update')->name('categories::e-store');
-            Route::post('soft_delete/{id}', 'CategoriesController@softDelete')->name('categories::soft_delete');
-            Route::post('delete/{id}', 'CategoriesController@delete')->name('categories::delete');
-            Route::post('restore/{id}', 'CategoriesController@restore')->name('categories::restore');
-        });
-
-        Route::group(['prefix' => 'units', 'namespace' => 'Units'], function(){
+        Route::group(['prefix' => 'units', 'namespace' => 'CmsApi\Units'], function(){
             Route::get('', 'UnitsController@index')->name('units');
             Route::get('generateCode', 'UnitsController@generateCode')->name('units::generateCode');
             Route::get('getCategory', 'UnitsController@getCategory')->name('units::getCategory');

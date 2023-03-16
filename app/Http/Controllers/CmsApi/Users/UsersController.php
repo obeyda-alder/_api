@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Users;
+namespace App\Http\Controllers\CmsApi\Users;
 
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
@@ -124,7 +124,7 @@ class UsersController extends Controller
             $resulte['success']   = false;
             $resulte['type']      = 'user_type_error';
             $resulte['data']      = '';
-             return response()->json($resulte, 400);
+            return response()->json($resulte, 400);
         }
     }
     public function store(Request $request)
@@ -299,95 +299,113 @@ class UsersController extends Controller
     }
     public function softDelete(Request $request, $id)
     {
+        $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
+
         if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+            return response()->json($resulte, 400);
         }
 
-        $user = User::withTrashed()->find($id);
-        if(!is_null($user)){
-            $user->delete();
-        } else {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'error',
-                'title'       => __('cms::base.msg.error_message.title'),
-                'description' => __('cms::base.msg.error_message.description'),
-            ], 500);
-        }
+        $type = $this->OfType(auth()->user()->type);
 
-        return response()->json([
-            'success'     => true,
-            'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
-        ], 200);
+        if($type){
+            $user = User::withTrashed()->find($id);
+            if(!is_null($user)){
+                $user->delete();
+            } else {
+                return response()->json([
+                    'success'     => false,
+                    'type'        => 'error',
+                    'title'       => __('cms::base.msg.error_message.title'),
+                    'description' => __('cms::base.msg.error_message.description'),
+                ], 500);
+            }
+
+            return response()->json([
+                'success'     => true,
+                'type'        => 'success',
+                'title'       => __('cms::base.msg.success_message.title'),
+                'description' => __('cms::base.msg.success_message.description'),
+            ], 200);
+        }
     }
     public function delete(Request $request, $id)
     {
+        $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
+
         if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+            return response()->json($resulte, 400);
         }
 
-        $user = User::withTrashed()->find($id);
-        if(!is_null($user)){
-            $user->forceDelete();
-        } else {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'error',
-                'title'       => __('cms::base.msg.error_message.title'),
-                'description' => __('cms::base.msg.error_message.description'),
-            ], 500);
-        }
+        $type = $this->OfType(auth()->user()->type);
 
-        return response()->json([
-            'success'     => true,
-            'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
-        ], 200);
+        if($type){
+            $user = User::withTrashed()->find($id);
+            if(!is_null($user)){
+                $user->forceDelete();
+            } else {
+                return response()->json([
+                    'success'     => false,
+                    'type'        => 'error',
+                    'title'       => __('cms::base.msg.error_message.title'),
+                    'description' => __('cms::base.msg.error_message.description'),
+                ], 500);
+            }
+
+            return response()->json([
+                'success'     => true,
+                'type'        => 'success',
+                'title'       => __('cms::base.msg.success_message.title'),
+                'description' => __('cms::base.msg.success_message.description'),
+            ], 200);
+        }
     }
     public function restore(Request $request, $id)
     {
+        $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
+
         if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+            return response()->json($resulte, 400);
         }
 
-        $user = User::withTrashed()->find($id);
-        if(!is_null($user)){
-            $user->restore();
-        } else {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'error',
-                'title'       => __('cms::base.msg.error_message.title'),
-                'description' => __('cms::base.msg.error_message.description'),
-            ], 500);
-        }
+        $type = $this->OfType(auth()->user()->type);
 
-        return response()->json([
-            'success'     => true,
-            'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
-        ], 200);
+        if($type){
+            $user = User::withTrashed()->find($id);
+            if(!is_null($user)){
+                $user->restore();
+            } else {
+                return response()->json([
+                    'success'     => false,
+                    'type'        => 'error',
+                    'title'       => __('cms::base.msg.error_message.title'),
+                    'description' => __('cms::base.msg.error_message.description'),
+                ], 500);
+            }
+
+            return response()->json([
+                'success'     => true,
+                'type'        => 'success',
+                'title'       => __('cms::base.msg.success_message.title'),
+                'description' => __('cms::base.msg.success_message.description'),
+            ], 200);
+        }
     }
 }

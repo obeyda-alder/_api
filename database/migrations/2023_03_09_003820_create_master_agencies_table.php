@@ -30,7 +30,6 @@ class CreateMasterAgenciesTable extends Migration
             $table->string('iban', 191)->nullable()->default(null);
             $table->string('iban_name', 191)->nullable()->default(null);
             $table->string('iban_type', 191)->nullable()->default(null);
-            $table->string('agent_type', 100);
             $table->string('phone_number', 100);
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('has_sub_agent')->default(0)->comment('0 | 1');
@@ -39,13 +38,17 @@ class CreateMasterAgenciesTable extends Migration
             $table->softDeletes();
             $table->timestamps();
 
-            $table->index(["country_id"], 'agent_country_id_index');
-            $table->index(["city_id"], 'agen_city_id_index');
-            $table->unique(["phone_number"], 'agen_phone_number_unique');
-            $table->unique(["email"], 'agen_email_unique');
-            $table->foreign('city_id', 'agen_city_id_index')->references('id')->on('cities')->onDelete('set null')->onUpdate('restrict');
-            $table->foreign('country_id', 'agen_country_id_index')->references('id')->on('countries')->onDelete('set null')->onUpdate('restrict');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unique(["phone_number"], 'master_agen_phone_number_unique');
+            $table->unique(["email"], 'master_agen_email_unique');
+
+            $table->index(["city_id"], 'master_agen_city_id_index');
+            $table->foreign('city_id', 'master_agen_city_id_index')->references('id')->on('cities')->onDelete('set null')->onUpdate('restrict');
+
+            $table->index(["country_id"], 'master_agent_country_id_index');
+            $table->foreign('country_id', 'master_agent_country_id_index')->references('id')->on('countries')->onDelete('set null')->onUpdate('restrict');
+
+            $table->index(["user_id"], 'master_agent_user_id_index');
+            $table->foreign('user_id', 'master_agent_user_id_index')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
