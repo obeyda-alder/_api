@@ -16,6 +16,10 @@ use App\Helpers\DataLists;
 use App\Helpers\Transactions;
 use App\Models\User;
 use Illuminate\Validation\Rule;
+use App\Models\Entities\Operations;
+use App\Models\Entities\RelationsType;
+use App\Models\Entities\OperationType;
+use App\Models\Entities\Categories;
 
 class ProcessesController extends Controller
 {
@@ -25,8 +29,17 @@ class ProcessesController extends Controller
     {
         $this->middleware('jwt.auth', ['except' => ['']]);
     }
-    public function makeProcesses(Request $request, $process_type)
+    public function makeProcesses(Request $request, $relation,  $process_type)
     {
-        return $process_type;
+        $rela =  Operations::with(['relation'])->whereHas('relation', function($query) use ($relation) {
+                    return $query->where('type', $relation);
+                })->where('type_en', $process_type)->exists();
+
+        if($rela){
+            return true;
+        }else{
+            return false;
+        }
+
     }
 }

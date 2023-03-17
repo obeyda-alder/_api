@@ -109,7 +109,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
         });
 
         Route::group(['prefix' => 'processes', 'namespace' => 'CmsApi\Processes'], function(){
-            Route::post('{process_type}', 'ProcessesController@makeProcesses');
+            Route::post('{relation}/{process_type}', 'ProcessesController@makeProcesses');
         });
 
     });
