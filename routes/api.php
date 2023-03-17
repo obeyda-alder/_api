@@ -83,13 +83,16 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
         Route::group(['prefix' => 'agencies', 'namespace' => 'CmsApi\Agencies'], function(){
             Route::get('/{type}', 'AgenciesController@index');
             Route::post('create/{type}', 'AgenciesController@create');
-            Route::post('store/{agencies_type}', 'AgenciesController@store')->name('agencies::store');
-            Route::get('edit/{id}/{agencies_type}', 'AgenciesController@show')->name('agencies::edit');
-            Route::post('e/store', 'AgenciesController@update')->name('agencies::e-store');
-            Route::post('soft_delete/{id}', 'AgenciesController@softDelete')->name('agencies::soft_delete');
-            Route::post('delete/{id}', 'AgenciesController@delete')->name('agencies::delete');
-            Route::post('restore/{id}', 'AgenciesController@restore')->name('agencies::restore');
+            Route::post('update/{id}/{type}', 'AgenciesController@update');
+            Route::post('soft_delete/{id}/{type}', 'AgenciesController@softDelete');
+            Route::post('delete/{id}/{type}', 'AgenciesController@delete');
+            Route::post('restore/{id}/{type}', 'AgenciesController@restore');
         });
+
+
+
+
+
 
         Route::group(['prefix' => 'units', 'namespace' => 'CmsApi\Units'], function(){
             Route::get('', 'UnitsController@index')->name('units');

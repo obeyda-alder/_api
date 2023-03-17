@@ -51,7 +51,7 @@ class UsersController extends Controller
 
         if($type){
             try{
-                $data = User::findOrFail($id);
+                $data = User::findOrFail($id)->whereNull('deleted_at');
                 $resulte              = [];
                 $resulte['success']   = true;
                 $resulte['message']   = __('cms.base.users_data');
@@ -90,11 +90,13 @@ class UsersController extends Controller
         $type = $this->OfType(auth()->user()->type);
 
         if($type){
-            $data = User::orderBy('id', 'DESC')->withTrashed();
+            $data = User::orderBy('id', 'DESC')->whereNull('deleted_at');
 
             if(auth()->user()->type != 'ROOT')
             {
                 $data->where('type', '!=','ROOT');
+            }else{
+                $data->withTrashed();
             }
 
             if($request->has('search') && !empty($request->search))

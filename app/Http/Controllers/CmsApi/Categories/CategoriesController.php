@@ -44,7 +44,7 @@ class CategoriesController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $data = Categories::with(['operationType', 'operationType.operation', 'operationType.operation.relation'])->orderBy('id', 'DESC');
+        $data = Categories::with(['operationType', 'operationType.operation', 'operationType.operation.relation'])->orderBy('id', 'DESC')->whereNull('deleted_at');
 
         if($request->has('search') && !empty($request->search))
         {

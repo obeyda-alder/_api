@@ -37,9 +37,9 @@ class AgenciesController extends Controller
         }
 
         if($type == 'master_agent'){
-            $data = MasterAgencies::with(['user', 'translations']);
+            $data = MasterAgencies::with(['user', 'translations'])->whereNull('deleted_at');
         }else if($type == 'sub_agent'){
-            $data = SubAgencies::with(['master', 'translations']);
+            $data = SubAgencies::with(['master', 'master.user', 'translations'])->whereNull('deleted_at');
         }
 
         $data->orderBy('id', 'DESC');
@@ -76,7 +76,6 @@ class AgenciesController extends Controller
         $validator = [
             'first_name'         => 'required|string|max:255',
             'last_name'          => 'required|string|max:255',
-            'email'              => $type == 'master_agent' ? 'required|email|unique:master_agencies' : 'required|email|unique:sub_agencies',
             'title'              => 'required|string|max:255',
             'description'        => 'required|string|max:255',
             'country_id'         => 'sometimes|exists:countries,id',
@@ -89,12 +88,23 @@ class AgenciesController extends Controller
             'iban'               => 'nullable|string|max:255',
             'iban_name'          => 'nullable|string|max:255',
             'iban_type'          => 'nullable|string|max:255',
-            'phone_number'       => 'required|string|max:255',
             'status'             => 'required|in:ACTIVE,SUSPENDED,PENDING',
             'image'              => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
             'user_id'            => [Rule::requiredIf($type == 'master_agent'),Rule::exists('users', 'id')->where('type', 'AGENCIES')],
             'master_agencies_id' => [Rule::requiredIf($type == 'sub_agent'),'exists:master_agencies,id'],
         ];
+
+        if($type == 'master_agent'){
+            $validator = array_merge($validator, [
+                'email'          => ['required', 'email', Rule::unique('master_agencies', 'email')],
+                'phone_number'   => ['required' , Rule::unique('master_agencies', 'phone_number')],
+            ]);
+        }else if($type == 'sub_agent'){
+            $validator = array_merge($validator, [
+                'email'          => ['required', 'email', Rule::unique('sub_agencies', 'email')],
+                'phone_number'   => ['required' , Rule::unique('sub_agencies', 'phone_number')],
+            ]);
+        }
 
         $validator = Validator::make($request->all(), $validator);
 
@@ -149,7 +159,9 @@ class AgenciesController extends Controller
                 if($request->hasFile('image'))
                 {
                     $path =  $this->UploadWithResizeImage($request, 'agencies', [[0 => 100, 1 => 100],[0 => 50, 1 => 50]]);
-                    $data->image = $path;
+                    foreach (\LaravelLocalization::getSupportedLanguagesKeys() as $loc) {
+                        $data->{'image:' . $loc} = $path;
+                    }
                 }
 
                 $data->save();
@@ -190,32 +202,114 @@ class AgenciesController extends Controller
             'description' => __('cms::base.msg.success_message.description'),
         ], 200);
     }
-    public function softDelete(Request $request, $id)
+    public function update(Request $request, $id, $type)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        $user = auth()->user();
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+             return response()->json($resulte, 400);
         }
 
-        if($request->agencies_type == 'master_agent'){
-            $agent = MasterAgencies::withTrashed()->find($id);
-        }else if($request->agencies_type == 'sub_agent'){
-            $agent = SubAgencies::withTrashed()->find($id);
+        $validator = [
+            'first_name'         => 'required|string|max:255',
+            'last_name'          => 'required|string|max:255',
+            'title'              => 'required|string|max:255',
+            'description'        => 'required|string|max:255',
+            'country_id'         => 'sometimes|exists:countries,id',
+            'city_id'            => 'sometimes|exists:cities,id',
+            'municipality_id'    => 'sometimes|exists:municipalities,id',
+            'neighborhood_id'    => 'sometimes|exists:neighborhoods,id',
+            'desc_address'       => 'nullable|string|max:255',
+            'latitude'           => 'nullable|string|max:255',
+            'longitude'          => 'nullable|string|max:255',
+            'iban'               => 'nullable|string|max:255',
+            'iban_name'          => 'nullable|string|max:255',
+            'iban_type'          => 'nullable|string|max:255',
+            'status'             => 'required|in:ACTIVE,SUSPENDED,PENDING',
+            'image'              => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
+        ];
+
+
+        if($type == 'master_agent'){
+            $validator = array_merge($validator, [
+                'email'          => ['required', 'email', Rule::unique('master_agencies', 'email')->ignore($id)],
+                'phone_number'   => ['required' , Rule::unique('master_agencies', 'phone_number')->ignore($id)],
+            ]);
+        }else if($type == 'sub_agent'){
+            $validator = array_merge($validator, [
+                'email'          => ['required', 'email', Rule::unique('sub_agencies', 'email')->ignore($id)],
+                'phone_number'   => ['required', Rule::unique('sub_agencies', 'phone_number')->ignore($id)],
+            ]);
         }
 
-        if(!is_null($agent)){
-            $agent->delete();
-        } else {
+        $validator = Validator::make($request->all(), $validator);
+
+        if ($validator->fails()) {
+            $resulte              = [];
+            $resulte['success']   = false;
+            $resulte['type']      = 'validations_error';
+            $resulte['errors']     = $validator->errors();
+            return response()->json($resulte, 400);
+        }
+
+        try{
+            DB::transaction(function() use ($request, $user , $id, $type ) {
+
+                if($type == 'master_agent'){
+                    $data = MasterAgencies::findOrFail($id);
+                }else if($type == 'sub_agent'){
+                    $data = SubAgencies::findOrFail($id);
+                }
+
+                foreach (\LaravelLocalization::getSupportedLanguagesKeys() as $loc) {
+                    $data->{'title:' . $loc} = "{$request->title}";
+                    $data->{'description:' . $loc} = "{$request->description}";
+                }
+
+                $data->first_name        = $request->first_name;
+                $data->last_name         = $request->last_name;
+                $data->email             = $request->email;
+                $data->phone_number      = $request->phone_number;
+                $data->country_id        = $request->country_id;
+                $data->city_id           = $request->city_id;
+                $data->municipality_id   = $request->municipality_id;
+                $data->neighborhood_id   = $request->neighborhood_id;
+                $data->desc_address      = $request->desc_address;
+                $data->latitude          = $request->latitude;
+                $data->longitude         = $request->longitude;
+                $data->iban              = $request->iban;
+                $data->iban_name         = $request->iban_name;
+                $data->iban_type         = $request->iban_type;
+                $data->status            = $request->status;
+
+                if(!is_null($data->image))
+                {
+                    $this->deleteImgByFileName('agencies', $data->image); //[[0 => 100, 1 => 100],[0 => 50, 1 => 50]]
+                }
+
+
+                if($request->hasFile('image'))
+                {
+                    $path =  $this->UploadWithResizeImage($request, 'agencies', [[0 => 100, 1 => 100],[0 => 50, 1 => 50]]);
+                    foreach (\LaravelLocalization::getSupportedLanguagesKeys() as $loc) {
+                        $data->{'image:' . $loc} = $path;
+                    }
+                }
+
+                $data->save();
+            });
+        }catch (Exception $e){
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
                 'title'       => __('cms::base.msg.error_message.title'),
                 'description' => __('cms::base.msg.error_message.description'),
+                'errors'      => '['. $e->getMessage() .']'
             ], 500);
         }
 
@@ -226,32 +320,34 @@ class AgenciesController extends Controller
             'description' => __('cms::base.msg.success_message.description'),
         ], 200);
     }
-    public function delete(Request $request, $id)
+    public function softDelete(Request $request, $id, $type)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+             return response()->json($resulte, 400);
         }
 
-        if($request->agencies_type == 'master_agent'){
-            $agent = MasterAgencies::withTrashed()->find($id);
-        }else if($request->agencies_type == 'sub_agent'){
-            $agent = SubAgencies::withTrashed()->find($id);
-        }
-
-        if(!is_null($agent)){
-            $agent->forceDelete();
-        } else {
+        try{
+            DB::transaction(function() use ($request, $type, $id) {
+                if($type == 'master_agent'){
+                    $agent = MasterAgencies::withTrashed()->findOrFail($id);
+                }elseif($type == 'sub_agent'){
+                    $agent = SubAgencies::withTrashed()->findOrFail($id);
+                }
+                $agent->delete();
+            });
+        }catch (Exception $e){
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
                 'title'       => __('cms::base.msg.error_message.title'),
                 'description' => __('cms::base.msg.error_message.description'),
+                'errors'      => '['. $e->getMessage() .']'
             ], 500);
         }
 
@@ -262,32 +358,72 @@ class AgenciesController extends Controller
             'description' => __('cms::base.msg.success_message.description'),
         ], 200);
     }
-    public function restore(Request $request, $id)
+    public function delete(Request $request, $id, $type)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+             return response()->json($resulte, 400);
         }
 
-        if($request->agencies_type == 'master_agent'){
-            $agent = MasterAgencies::withTrashed()->find($id);
-        }else if($request->agencies_type == 'sub_agent'){
-            $agent = SubAgencies::withTrashed()->find($id);
-        }
-
-        if(!is_null($agent)){
-            $agent->restore();
-        } else {
+        try{
+            DB::transaction(function() use ($request, $type, $id) {
+                if($type == 'master_agent'){
+                    $agent = MasterAgencies::withTrashed()->findOrFail($id);
+                }elseif($type == 'sub_agent'){
+                    $agent = SubAgencies::withTrashed()->findOrFail($id);
+                }
+                $agent->forceDelete();
+            });
+        }catch (Exception $e){
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
                 'title'       => __('cms::base.msg.error_message.title'),
                 'description' => __('cms::base.msg.error_message.description'),
+                'errors'      => '['. $e->getMessage() .']'
+            ], 500);
+        }
+
+        return response()->json([
+            'success'     => true,
+            'type'        => 'success',
+            'title'       => __('cms::base.msg.success_message.title'),
+            'description' => __('cms::base.msg.success_message.description'),
+        ], 200);
+    }
+    public function restore(Request $request, $id, $type)
+    {
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        {
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+             return response()->json($resulte, 400);
+        }
+
+        try{
+            DB::transaction(function() use ($request, $type, $id) {
+                if($type == 'master_agent'){
+                    $agent = MasterAgencies::withTrashed()->findOrFail($id);
+                }elseif($type == 'sub_agent'){
+                    $agent = SubAgencies::withTrashed()->findOrFail($id);
+                }
+                $agent->restore();
+            });
+        }catch (Exception $e){
+            return response()->json([
+                'success'     => false,
+                'type'        => 'error',
+                'title'       => __('cms::base.msg.error_message.title'),
+                'description' => __('cms::base.msg.error_message.description'),
+                'errors'      => '['. $e->getMessage() .']'
             ], 500);
         }
 
