@@ -40,6 +40,7 @@ trait DataLists {
                 $Return['deleted_at']         = $user->deleted_at;
                 $Return['created_at']         = $user->created_at;
                 $Return['updated_at']         = $user->updated_at;
+                $Return['use']                = $user;
             } else {
                 foreach($user as $key => $use)
                 {
@@ -61,6 +62,7 @@ trait DataLists {
                     $Return[$key]['deleted_at']         = $use->deleted_at;
                     $Return[$key]['created_at']         = $use->created_at;
                     $Return[$key]['updated_at']         = $use->updated_at;
+                    $Return[$key]['use']                = $use;
                 }
             }
         }

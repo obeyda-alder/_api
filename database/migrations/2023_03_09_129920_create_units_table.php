@@ -17,17 +17,25 @@ class CreateUnitsTable extends Migration
         if (Schema::hasTable($this->set_schema_table)) return;
         Schema::create($this->set_schema_table, function (Blueprint $table) {
             $table->increments('id');
-            $table->string('name', 191);
-            $table->string('code', 191);
-            $table->decimal('price', 7, 2)->default(0);
+            $table->string('unit_code', 191)->default(null)->comment('unit type');
+            $table->integer('unit_value')->default(0);
             $table->string('status', 50)->default('ACTIVE')->comment('ACTIVE | NOT_ACTIVE');
-            $table->unsignedInteger('user_id');
-            $table->unsignedInteger('category_id')->nullable()->default(null);
-            $table->unique(["code"], 'units_code_unique');
+            $table->decimal('price', 7, 2)->default(0);
+            $table->unsignedInteger('add_by');
+            $table->unsignedInteger('unit_type_id');
+
+
+
+            $table->unique(["unit_code"], 'unit_code_er_unique');
+
+            $table->index(["unit_type_id"], 'unit_type_id_SAWW_RW');
+            $table->foreign('unit_type_id', 'unit_type_id_SAWW_RW')->references('id')->on('unit_type')->onDelete('cascade');
+
+            $table->index(["add_by"], 'add_by_EFJa_ACXX');
+            $table->foreign('add_by', 'add_by_EFJa_ACXX')->references('id')->on('users')->onDelete('cascade');
+
             $table->softDeletes();
             $table->timestamps();
-            $table->foreign('user_id', 'user_id_dax_iw')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('category_id', 'category_id_we_osa')->references('id')->on('categories')->onDelete('cascade');
         });
     }
 

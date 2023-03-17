@@ -12,7 +12,6 @@ use DB;
 use App\Helpers\Helper;
 use App\Models\User;
 use Keygen\Keygen;
-use App\Models\Entities\Categories;
 
 class UnitsController extends Controller
 {
@@ -22,291 +21,106 @@ class UnitsController extends Controller
     {
         $this->middleware('jwt.auth', ['except' => ['']]);
     }
-    public function generateCode($length = 10)
+    public function generateCode($length = 14)
     {
-        $code = Keygen::numeric($length)->prefix('UN-')->generate();
+        $code = Keygen::alphanum($length)->prefix('UN-')->generate(); //->prefix('U')->suffix('G')->generate();
 
-        if(units::where('code', $code)->exists())
+        if(units::where('unit_code', $code)->exists())
         {
             return $this->generateCode($length);
         }
 
-        return $code;
-    }
-    public function getCategory(Request $request)
-    {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
-        {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
-        }
-
-        return Categories::find($request->category_id);
+        return strtoupper($code);
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
         {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
-        }
-        return view('cms::backend.units.index');
-    }
-    public function data(Request $request)
-    {
-        $data = Units::orderBy('id', 'DESC')->withTrashed();
-
-        $data->get();
-        return Datatables::of($data)
-        ->filter(function($query) use ($request) {
-            if(!is_null($request->search['value']))
-            {
-                $query->where(function($q) use ($request) {
-                    $q->where('name', 'like', "%{$request->search['value']}%")
-                    ->orWhere('code', 'like', "%{$request->search['value']}%")
-                    ->orWhere('price', 'like', "%{$request->search['value']}%");
-                });
-            }
-        })
-        ->addIndexColumn()
-        ->addColumn('name', function ($units) {
-            return $units->name ?? '';
-        })
-        ->addColumn('code', function ($units) {
-            return $units->code ?? '';
-        })
-        ->addColumn('from_to', function ($units) {
-            return __('cms::base.units.from_to', ['from' => $units->from, 'to' => $units->to]) ?? '';
-        })
-        ->addColumn('price', function ($units) {
-            return $units->price ?? '';
-        })
-        ->addColumn('status', function ($units) {
-            return $units->status ?? '';
-        })
-        ->addColumn('actions', function($units) use($request){
-            $actions   = [];
-            if($units->trashed()) {
-                $actions[] = [
-                    'id'            => $units->id,
-                    'label'         => __('cms::base.restore'),
-                    'type'          => 'icon',
-                    'link'          => route('cms::units::restore', ['id' => $units->id ]),
-                    'method'        => 'POST',
-                    'request_type'  => 'units_restore_'.$units->id,
-                    'class'         => 'restore-action',
-                    'icon'          => 'fas fa-trash-restore'
-                ];
-                $actions[] = [
-                    'id'            => $units->id,
-                    'label'         => __('cms::base.delete'),
-                    'type'          => 'icon',
-                    'link'          => route('cms::units::delete', ['id' => $units->id ]),
-                    'method'        => 'POST',
-                    'request_type'  => 'delete_'.$units->id,
-                    'class'         => 'delete-action',
-                    'icon'          => 'fas fa-user-times'
-                ];
-            } else {
-                $actions[] = [
-                    'id'            => $units->id,
-                    'label'         => __('cms::base.soft_delete'),
-                    'type'          => 'icon',
-                    'link'          => route('cms::units::soft_delete', ['id' => $units->id ]),
-                    'method'        => 'POST',
-                    'request_type'  => 'soft_delete_'.$units->id,
-                    'class'         => 'soft-delete-action',
-                    'icon'          => 'fas fa-trash'
-                ];
-                $actions[] = [
-                    'id'            => $units->id,
-                    'label'         => __('cms::base.update'),
-                    'type'          => 'icon',
-                    'link'          => route('cms::units::edit', ['id' => $units->id ]),
-                    'method'        => 'GET',
-                    'request_type'  => 'update_'.$units->id,
-                    'class'         => 'update-action',
-                    'icon'          => 'fas fa-edit'
-                ];
-            }
-            return $actions;
-        })
-        ->rawColumns([])
-        ->make(true);
-    }
-    public function create(Request $request)
-    {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
-        {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
-        }
-        $users      = User::where('type', 'CUSTOMERS')->get();
-        $categories = Categories::get();
-        return view('cms::backend.units.create', ['users' => $users, 'categories' => $categories ]);
-    }
-    public function store(Request $request)
-    {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
-        {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+             return response()->json($resulte, 400);
         }
 
-        $userValidator = [
-            'name'        => 'required_if:units_type,=,new|string|max:255',
-            'code'        => 'required_if:units_type,=,new|string|max:255',
-            'price'       => 'required_if:units_type,=,new|numeric',
-            'status'      => 'required_if:units_type,=,new|in:ACTIVE,NOT_ACTIVE',
-            'user_id'     => 'required|exists:users,id',
-            'category_id' => 'required_if:units_type,=,from_categories', //exists:categories,id
+        $data = units::with(['unit_type', 'unit_type.relation', 'user'])->orderBy('id', 'DESC')->whereNull('deleted_at');
+
+        if($request->has('search') && !empty($request->search))
+        {
+            $data->where(function($q) use ($request) {
+                $q->where('unit_code', 'like', "%{$request->search['value']}%")
+                ->orWhere('unit_value', 'like', "%{$request->search['value']}%")
+                ->orWhere('status', 'like', "%{$request->search['value']}%");
+            });
+        }
+
+        $resulte              = [];
+        $resulte['success']   = true;
+        $resulte['message']   = __('cms.base.units_data');
+        $resulte['count']     = $data->count();
+        $resulte['data']      = $data->get();
+        return response()->json($resulte, 200);
+    }
+    public function generate(Request $request)
+    {
+        $user = auth()->user();
+
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        {
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('cms::base.permission_denied.title');
+            $resulte['description']  = __('cms::base.permission_denied.description');
+             return response()->json($resulte, 400);
+        }
+
+        $validator = [
+            'unit_type_id'    => 'required|exists:unit_type,id',
+            'price'           => 'required|min:0',
+            'unit_value'      => 'required|min:0',
+            'status'          => 'required|in:ACTIVE,NOT_ACTIVE',
         ];
 
-        $validator = Validator::make($request->all(), $userValidator);
-        if(!$validator->fails())
-        {
-            try{
-                DB::transaction(function() use ($request) {
-                    $data = new units;
-                    if($request->units_type == 'new') {
-                        $set = $request;
-                    }else if($request->units_type == 'from_categories'){
-                        $cat = Categories::find($request->category_id);
-                        $set = $cat;
-                        $data->category_id = $request->category_id;
-                    }
-                    $data->name    = $set->name;
-                    $data->user_id = $request->user_id;
-                    $data->code    = $set->code;
-                    $data->price   = $set->price;
-                    $data->status  = $set->status;
-                    $data->save();
-                });
-            }catch (Exception $e){
-                return response()->json([
-                    'success'     => false,
-                    'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
-                    'errors'      => '['. $e->getMessage() .']'
-                ], 500);
-            }
-        }else {
+        $validator = Validator::make($request->all(), $validator);
+
+        if ($validator->fails()) {
+            $resulte                  = [];
+            $resulte['success']       = false;
+            $resulte['type']          = 'validations_error';
+            $resulte['errors']        = $validator->errors();
+            return response()->json($resulte, 400);
+        }
+
+
+        try{
+            DB::transaction(function() use ($request, $user) {
+                $data = new units;
+                $data->unit_code        = $this->generateCode();
+                $data->unit_type_id     = $request->unit_type_id;
+                $data->price            = $request->price;
+                $data->unit_value       = $request->unit_value;
+                $data->add_by           = $user->id;
+                $data->status           = $request->status;
+                $data->save();
+            });
+        }catch (Exception $e){
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
-                'title'       => __('cms::base.msg.validation_error.title'),
-                'description' => __('cms::base.msg.validation_error.description'),
-                'errors'      => $validator->getMessageBag()->toArray()
-            ], 402);
+                'title'       => __('cms::base.msg.error_message.title'),
+                'description' => __('cms::base.msg.error_message.description'),
+                'errors'      => '['. $e->getLine() .']'
+            ], 500);
         }
+
         return response()->json([
             'success'     => true,
             'type'        => 'success',
             'title'       => __('cms::base.msg.success_message.title'),
             'description' => __('cms::base.msg.success_message.description'),
-            'redirect_url'  => route('cms::units')
         ], 200);
-    }
-    public function show(Request $request, $id)
-    {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
-        {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
-        }
-        $users      = User::where('type', 'CUSTOMERS')->get();
-        $units      = units::find($id);
-        $categories = Categories::get();
-        return view('cms::backend.units.update', ['data' => $units, 'users' => $users , 'categories' => $categories ]);
-    }
-    public function update(Request $request)
-    {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
-        {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'permission_denied',
-                'title'       => __('cms::base.permission_denied.title'),
-                'description' => __('cms::base.permission_denied.description'),
-            ], 402);
-        }
-
-        $userValidator = [
-            'name'        => 'required_if:units_type,=,new|string|max:255',
-            'code'        => 'required_if:units_type,=,new|string|max:255',
-            'price'       => 'required_if:units_type,=,new|numeric',
-            'status'      => 'required_if:units_type,=,new|in:ACTIVE,NOT_ACTIVE',
-            'user_id'     => 'required|exists:users,id',
-            'category_id' => 'required_if:units_type,=,from_categories', //exists:categories,id
-        ];
-
-        $validator = Validator::make($request->all(), $userValidator);
-        if(!$validator->fails())
-        {
-            try{
-                DB::transaction(function() use ($request) {
-                    $data = units::find($request->unit_id);
-                    if($request->units_type == 'new') {
-                        $set = $request;
-                    }else if($request->units_type == 'from_categories'){
-                        $cat = Categories::find($request->category_id);
-                        $set = $cat;
-                        $data->category_id = $request->category_id;
-                    }
-                    $data->name    = $set->name;
-                    $data->user_id = $request->user_id;
-                    $data->code    = $set->code;
-                    $data->price   = $set->price;
-                    $data->status  = $set->status;
-                    $data->save();
-                });
-            }catch (Exception $e){
-                return response()->json([
-                    'success'     => false,
-                    'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
-                    'errors'      => '['. $e->getMessage() .']'
-                ], 500);
-            }
-        }else {
-            return response()->json([
-                'success'     => false,
-                'type'        => 'error',
-                'title'       => __('cms::base.msg.validation_error.title'),
-                'description' => __('cms::base.msg.validation_error.description'),
-                'errors'      => $validator->getMessageBag()->toArray()
-            ], 402);
-        }
-        return response()->json([
-            'success'     => true,
-            'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
-            'redirect_url'  => route('cms::units')
-        ], 200);
-
     }
     public function softDelete(Request $request, $id)
     {
@@ -320,16 +134,16 @@ class UnitsController extends Controller
             ], 402);
         }
 
-        $units = units::withTrashed()->find($id);
-
-        if(!is_null($units)){
+        try {
+            $units = units::findOrFail($id);
             $units->delete();
-        } else {
+        }catch (Exception $e){
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
                 'title'       => __('cms::base.msg.error_message.title'),
                 'description' => __('cms::base.msg.error_message.description'),
+                'errors'      => '['. $e->getMessage() .']'
             ], 500);
         }
 
@@ -352,16 +166,16 @@ class UnitsController extends Controller
             ], 402);
         }
 
-        $units = units::withTrashed()->find($id);
-
-        if(!is_null($units)){
+        try {
+            $units = units::withTrashed()->findOrFail($id);
             $units->forceDelete();
-        } else {
+        }catch (Exception $e){
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
                 'title'       => __('cms::base.msg.error_message.title'),
                 'description' => __('cms::base.msg.error_message.description'),
+                'errors'      => '['. $e->getMessage() .']'
             ], 500);
         }
 
@@ -384,16 +198,16 @@ class UnitsController extends Controller
             ], 402);
         }
 
-        $units = units::withTrashed()->find($id);
-
-        if(!is_null($units)){
+        try {
+            $units = units::withTrashed()->findOrFail($id);
             $units->restore();
-        } else {
+        }catch (Exception $e){
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
                 'title'       => __('cms::base.msg.error_message.title'),
                 'description' => __('cms::base.msg.error_message.description'),
+                'errors'      => '['. $e->getMessage() .']'
             ], 500);
         }
 

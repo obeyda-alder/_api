@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\AddressDetails\City;
 use App\Models\Entities\MasterAgencies;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-
+use App\Models\Entities\MoneySafe;
+use App\Models\Entities\UnitsSafe;
 class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
@@ -110,6 +111,14 @@ class User extends Authenticatable implements JWTSubject
     public function city()
     {
         return $this->belongsTo(City::class, 'city_id', 'id');
+    }
+    public function money()
+    {
+        return $this->hasOne(MoneySafe::class, 'user_id', 'id');
+    }
+    public function unit()
+    {
+        return $this->hasOne(UnitsSafe::class, 'user_id', 'id');
     }
     public function masterAgencies()
     {

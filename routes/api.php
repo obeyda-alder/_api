@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
 
-
     Route::group(['middleware' => ['jwt.auth', 'ofType:ROOT'], 'prefix' => 'setting'], function () {
         Route::get('migrate', function(){     \Artisan::call('migrate'); dd('done'); });
         Route::get('clearcach', function(){   \Artisan::call('cache:clear');  dd('done'); });
@@ -30,7 +29,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
         Route::post('logout', 'AuthController@logout');
     });
 
-    Route::group(['middleware' => 'ofType:ROOT,ADMINS,EMPLOYEES'], function ($router) {
+    Route::group(['middleware' => 'ofType:ROOT,ADMINS,EMPLOYEES,AGENCIES'], function ($router) {
 
         Route::group(['prefix' => 'users/u/', 'namespace' => 'CmsApi\Users'], function(){
             Route::get('edit/{id}', 'UsersController@UserData');
@@ -89,23 +88,29 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::post('restore/{id}/{type}', 'AgenciesController@restore');
         });
 
+        Route::group(['prefix' => 'transaction_type', 'namespace' => 'CmsApi\Units'], function(){
+            Route::get('', 'TransactionTypeController@index');
+            Route::post('create', 'TransactionTypeController@create');
+            Route::post('delete/{id}', 'TransactionTypeController@delete');
+        });
 
-
-
-
+        Route::group(['prefix' => 'unit_type', 'namespace' => 'CmsApi\Units'], function(){
+            Route::get('', 'UnitTypeController@index');
+            Route::post('create', 'UnitTypeController@create');
+            Route::post('delete/{id}', 'UnitTypeController@delete');
+        });
 
         Route::group(['prefix' => 'units', 'namespace' => 'CmsApi\Units'], function(){
-            Route::get('', 'UnitsController@index')->name('units');
-            Route::get('generateCode', 'UnitsController@generateCode')->name('units::generateCode');
-            Route::get('getCategory', 'UnitsController@getCategory')->name('units::getCategory');
-            Route::get('units_data', 'UnitsController@data')->name('units::data');
-            Route::get('create', 'UnitsController@create')->name('units::create');
-            Route::post('store', 'UnitsController@store')->name('units::store');
-            Route::get('edit/{id}', 'UnitsController@show')->name('units::edit');
-            Route::post('e/store', 'UnitsController@update')->name('units::e-store');
-            Route::post('soft_delete/{id}', 'UnitsController@softDelete')->name('units::soft_delete');
-            Route::post('delete/{id}', 'UnitsController@delete')->name('units::delete');
-            Route::post('restore/{id}', 'UnitsController@restore')->name('units::restore');
+            Route::get('', 'UnitsController@index');
+            Route::post('generate', 'UnitsController@generate');
+            Route::post('soft_delete/{id}', 'UnitsController@softDelete');
+            Route::post('delete/{id}', 'UnitsController@delete');
+            Route::post('restore/{id}', 'UnitsController@restore');
         });
+
+        Route::group(['prefix' => 'processes', 'namespace' => 'CmsApi\Processes'], function(){
+            Route::post('{process_type}', 'ProcessesController@makeProcesses');
+        });
+
     });
 });

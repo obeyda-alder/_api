@@ -5,7 +5,6 @@ namespace App\Http\Controllers\CmsApi\Users;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use DataTables;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\Validator;
@@ -13,7 +12,8 @@ use DB;
 use Illuminate\Support\Facades\Hash;
 use App\Helpers\Helper;
 use App\Helpers\DataLists;
-use App\Models\AddressDetails\Country;
+use App\Models\Entities\MoneySafe;
+use App\Models\Entities\UnitsSafe;
 
 class UsersController extends Controller
 {
@@ -51,7 +51,7 @@ class UsersController extends Controller
 
         if($type){
             try{
-                $data = User::findOrFail($id)->whereNull('deleted_at');
+                $data = User::with(['city', 'unit', 'money', 'masterAgencies', 'masterAgencies'])->whereNull('deleted_at')->findOrFail($id); //with(['city', 'mony', 'masterAgencies', 'masterAgencies.sub_agent'])->
                 $resulte              = [];
                 $resulte['success']   = true;
                 $resulte['message']   = __('cms.base.users_data');
@@ -90,7 +90,7 @@ class UsersController extends Controller
         $type = $this->OfType(auth()->user()->type);
 
         if($type){
-            $data = User::orderBy('id', 'DESC')->whereNull('deleted_at');
+            $data = User::with(['city', 'unit','money', 'masterAgencies', 'masterAgencies'])->orderBy('id', 'DESC')->whereNull('deleted_at');
 
             if(auth()->user()->type != 'ROOT')
             {
@@ -192,6 +192,14 @@ class UsersController extends Controller
                     }
 
                     $user->save();
+
+                    $money_safe          = new MoneySafe;
+                    $money_safe->user_id = $user->id;
+                    $money_safe->save();
+
+                    $unit_safe          = new UnitsSafe;
+                    $unit_safe->user_id = $user->id;
+                    $unit_safe->save();
                 });
             }catch (Exception $e){
                 return response()->json([
