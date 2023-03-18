@@ -4,7 +4,7 @@ return [
     'users_type' => [
         'ALL',
         'ROOT',
-        'ADMINS',
+        'ADMIN',
         'EMPLOYEES',
         'AGENCIES',
         'CUSTOMERS',

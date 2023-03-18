@@ -17,10 +17,10 @@ class CreateRelationsTypeTable extends Migration
         if (Schema::hasTable($this->set_schema_table)) return;
         Schema::create($this->set_schema_table, function (Blueprint $table) {
             $table->increments('id');
-            $table->string('type', 191)->default(null)->comment('relation type');
+            $table->string('relation_type', 191)->default(null)->comment('relation type');
+            $table->string('user_type', 191)->default(null)->comment('user type');
             $table->unsignedInteger('add_by_user_id');
 
-            $table->unique(["type"], 'type_unique');
             $table->index(["add_by_user_id"], 'add_by_user_id_relat_iwas');
             $table->foreign('add_by_user_id', 'add_by_user_id_relat_iwas')->references('id')->on('users')->onDelete('cascade');
         });

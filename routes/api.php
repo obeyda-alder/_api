@@ -29,7 +29,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
         Route::post('logout', 'AuthController@logout');
     });
 
-    Route::group(['middleware' => 'ofType:ROOT,ADMINS,EMPLOYEES,AGENCIES'], function ($router) {
+    Route::group(['middleware' => 'ofType:ROOT,ADMIN,EMPLOYEES,AGENCIES'], function ($router) {
 
         Route::group(['prefix' => 'users/u/', 'namespace' => 'CmsApi\Users'], function(){
             Route::get('edit/{id}', 'UsersController@UserData');
@@ -108,8 +108,8 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::post('restore/{id}', 'UnitsController@restore');
         });
 
-        Route::group(['prefix' => 'processes', 'namespace' => 'CmsApi\Processes'], function(){
-            Route::post('{relation}/{process_type}', 'ProcessesController@makeProcesses');
+        Route::group(['prefix' => 'make_operations', 'namespace' => 'CmsApi\Operations'], function(){
+            Route::post('{operation_type}', 'MakeOperationsController@operation');
         });
 
     });

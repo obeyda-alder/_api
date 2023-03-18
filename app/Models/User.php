@@ -47,6 +47,48 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    // Refrence..
+    // public $relations = [
+    //     'admin_with_employees' => [
+    //         'admin' => [
+    //             'approval',             // `الموافقة`
+    //             'independence',        // `الإستقلال`
+    //             'Central obstetrics', // `التوليد المركزي`
+    //             'editing',           // `التحرير`
+    //             'archives',         // `الأرشفة`
+    //         ],
+    //         'employees' => [
+    //             'packing',         // `التعبئة`
+    //             'loopback',       // `الاسترجاع`
+    //             'Transport',     // `النقل`
+    //         ]
+    //     ],
+    //     'employees_with_master_agent' => [
+    //         'employees' => [
+    //             'approval',       // `الموافقة`
+    //             'packing',       // `التعبئة`
+    //         ],
+    //         'master_agent' => [
+    //             'editing',         // `التحرير`
+    //             'loopback',       // `الاسترجاع`
+    //             'barter',        // `المقايضة`
+    //         ],
+    //     ],
+    //     'master_agent_with_sub_agent' => [
+    //         'master_agent' => [
+    //             'approval',         // `الموافقة`
+    //             'packing',         // `التعبئة`
+    //         ],
+    //         'sub_agent' => [
+    //             'editing',         // `التحرير`
+    //             'loopback',       // `الاسترجاع`
+    //             'barter',        // `المقايضة`
+    //         ],
+    //     ],
+    // ];
+
+
     public function isApproved()
     {
         if( !in_array( $this->type,  config('custom.users_type') ) )

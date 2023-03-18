@@ -34,7 +34,7 @@ class CategoriesController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -65,7 +65,7 @@ class CategoriesController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -131,7 +131,7 @@ class CategoriesController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;

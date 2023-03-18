@@ -26,7 +26,7 @@ class AgenciesController extends Controller
     }
     public function index(Request $request, $type)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -63,7 +63,7 @@ class AgenciesController extends Controller
     public function create(Request $request, $type)
     {
         $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -205,7 +205,7 @@ class AgenciesController extends Controller
     public function update(Request $request, $id, $type)
     {
         $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -322,7 +322,7 @@ class AgenciesController extends Controller
     }
     public function softDelete(Request $request, $id, $type)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -360,7 +360,7 @@ class AgenciesController extends Controller
     }
     public function delete(Request $request, $id, $type)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -398,7 +398,7 @@ class AgenciesController extends Controller
     }
     public function restore(Request $request, $id, $type)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;

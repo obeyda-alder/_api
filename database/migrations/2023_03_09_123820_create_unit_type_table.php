@@ -18,8 +18,8 @@ class CreateUnitTypeTable extends Migration
         Schema::create($this->set_schema_table, function (Blueprint $table) {
             $table->increments('id');
             $table->string('type', 191)->default(null)->comment('unit type');
-            $table->unsignedInteger('add_by_user_id');
             $table->unsignedInteger('relation_id');
+            $table->unsignedInteger('add_by_user_id');
 
             $table->index(["relation_id"], 'relation_id_unit_type_PAO');
             $table->foreign('relation_id', 'relation_id_unit_type_PAO')->references('id')->on('relations_type')->onDelete('cascade');

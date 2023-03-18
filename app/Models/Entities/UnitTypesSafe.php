@@ -7,28 +7,28 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\Entities\UnitType;
 
-class RelationsType extends Model
+class UnitTypesSafe extends Model
 {
     use HasFactory;
 
-    protected $table = 'relations_type';
+    protected $table = 'unit_types_safe';
 
     protected $fillable = [
         'id',
-        'relation_type',
-        'user_type',
-        'add_by_user_id',
+        'unit_type_count',
+        'user_id',
+        'unit_type_id',
+        'status'
     ];
 
     public $timestamps = false;
 
-    public function unit_Type()
+    public function unitType()
     {
-        return $this->hasMany(UnitType::class,'relation_id','id');
+        return $this->hasMany(UnitType::class, 'id', 'unit_type_id');
     }
-
     public function user()
     {
-        return $this->belongsTo(User::class, 'add_by_user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

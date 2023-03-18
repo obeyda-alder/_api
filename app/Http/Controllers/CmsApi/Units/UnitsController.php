@@ -34,7 +34,7 @@ class UnitsController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -66,7 +66,7 @@ class UnitsController extends Controller
     {
         $user = auth()->user();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;

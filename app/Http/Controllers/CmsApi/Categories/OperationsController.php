@@ -24,7 +24,7 @@ class OperationsController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -55,7 +55,7 @@ class OperationsController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -86,7 +86,7 @@ class OperationsController extends Controller
             try{
                 DB::transaction(function() use ($request, $user) {
                     $operation = Operations::create([
-                        'type_en'         => strtoupper($request->type_en),
+                        'type_en'         => str_replace(' ', '_', strtoupper($request->type_en)),
                         'type_ar'         => strtoupper($request->type_ar),
                         'relation_id'     => $request->relation_id,
                         'add_by_user_id'  => $user->id
@@ -112,7 +112,7 @@ class OperationsController extends Controller
     }
     public function delete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;

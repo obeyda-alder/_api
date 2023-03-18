@@ -23,7 +23,7 @@ class RelationsTypeController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -38,7 +38,7 @@ class RelationsTypeController extends Controller
         if($request->has('search') && !empty($request->search))
         {
             $data->where(function($q) use ($request) {
-                $q->where('type', 'like', "%{$request->search['value']}%")
+                $q->where('relation_type', 'like', "%{$request->search['value']}%")
                 ->orWhere('add_by_user_id', 'like', "%{$request->search['value']}%");
             });
         }
@@ -53,7 +53,7 @@ class RelationsTypeController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -64,7 +64,8 @@ class RelationsTypeController extends Controller
         }
 
         $validator = [
-            'type'     => 'required|string|max:255' //|in:'. implode(',', config('custom.relation_type')),
+            'relation_type'     => 'required|string|max:255', //|in:'. implode(',', config('custom.relation_type')),
+            'user_type'         => 'required|string|max:255'
         ];
 
         $validator = Validator::make($request->all(), $validator);
@@ -80,7 +81,8 @@ class RelationsTypeController extends Controller
             try{
                 DB::transaction(function() use ($request, $user) {
                     $operation = RelationsType::create([
-                        'type'            => $request->type,
+                        'relation_type'    => str_replace(' ', '_', strtoupper($request->relation_type)),
+                        'user_type'        => str_replace(' ', '_', strtoupper($request->user_type)),
                         'add_by_user_id'  => $user->id
                     ]);
                     $operation->save();
@@ -104,7 +106,7 @@ class RelationsTypeController extends Controller
     }
     public function delete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;

@@ -37,7 +37,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -77,7 +77,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -133,7 +133,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -151,7 +151,7 @@ class UsersController extends Controller
                 'email'              => 'required|unique:users|email',
                 'password'           => 'required|string|min:6|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
                 'confirm_password'   => 'required|same:password',
-                'type'               => 'required|in:ADMINS,EMPLOYEES,CUSTOMERS,AGENCIES',
+                'type'               => 'required|in:ADMIN,EMPLOYEES,CUSTOMERS,AGENCIES',
                 'image'              => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
             ];
 
@@ -223,7 +223,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -240,7 +240,7 @@ class UsersController extends Controller
                 'name'               => 'required|string|max:255',
                 'email'              => 'required|email|unique:users,id,'.$request->user_id,
                 'password'           => 'nullable|string|min:6|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
-                'type'               => 'required|in:ADMINS,EMPLOYEES,CUSTOMERS,AGENCIES',
+                'type'               => 'required|in:ADMIN,EMPLOYEES,CUSTOMERS,AGENCIES',
                 'image'              => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
             ];
 
@@ -311,7 +311,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -348,7 +348,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -385,7 +385,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\CmsApi\Units;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use App\Models\Entities\UnitType;
+use App\Models\Entities\UnitTypesSafe;
 use Exception;
 use Illuminate\Support\Facades\Validator;
 use DB;
@@ -24,7 +25,7 @@ class UnitTypeController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -34,7 +35,7 @@ class UnitTypeController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $data = UnitType::with(['user', 'relation'])->orderBy('id', 'DESC');
+        $data = UnitType::with(['unit_type_safe', 'user', 'relation'])->orderBy('id', 'DESC');
 
         if($request->has('search') && !empty($request->search))
         {
@@ -54,7 +55,7 @@ class UnitTypeController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -89,6 +90,11 @@ class UnitTypeController extends Controller
                     'add_by_user_id'  => $user->id
                 ]);
                 $unit_type->save();
+
+                $unit_type_safe               = new UnitTypesSafe;
+                $unit_type_safe->user_id      = $user->id;
+                $unit_type_safe->unit_type_id = $unit_type->id;
+                $unit_type_safe->save();
             });
         }catch (Exception $e){
             return response()->json([
@@ -109,14 +115,14 @@ class UnitTypeController extends Controller
     }
     public function delete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMINS"]))
+        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
             $resulte['title']        = __('cms::base.permission_denied.title');
             $resulte['description']  = __('cms::base.permission_denied.description');
-             return response()->json($resulte, 400);
+            return response()->json($resulte, 400);
         }
 
         $unit_type = UnitType::find($id);
