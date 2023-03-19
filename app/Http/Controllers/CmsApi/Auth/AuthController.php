@@ -32,7 +32,7 @@ class AuthController extends Controller
         if (! $token = auth()->attempt($validator->validated())) {
             $resulte             = [];
             $resulte['success']  = false;
-            $resulte['message']  = __('cms.base.somthing_rowng');
+            $resulte['message']  = __('api.somthing_rowng');
             $resulte['data']     = '';
             return response()->json($resulte, 401);
         }
@@ -40,7 +40,7 @@ class AuthController extends Controller
         if(auth()->user()->status != 'ACTIVE') {
             $resulte             = [];
             $resulte['success']  = false;
-            $resulte['message']  = __('cms.base.somthing_rowng');
+            $resulte['message']  = __('api.somthing_rowng');
             $resulte['data']     = '';
             return response()->json($resulte, 401);
         }
@@ -67,7 +67,7 @@ class AuthController extends Controller
 
         $resulte              = [];
         $resulte['success']   = true;
-        $resulte['message']   = __('cms.base.User successfully registered');
+        $resulte['message']   = __('api.User successfully registered');
         $resulte['data']      = $user;
         return response()->json($resulte, 200);
     }
@@ -77,7 +77,7 @@ class AuthController extends Controller
 
         $resulte                 = [];
         $resulte['success']      = true;
-        $resulte['message']      = __('cms.base.User successfully signed out');
+        $resulte['message']      = __('api.User successfully signed out');
         $resulte['data']         = '';
         return response()->json($resulte, 200);
     }
@@ -89,7 +89,7 @@ class AuthController extends Controller
     {
         $resulte             = [];
         $resulte['success']  = true;
-        $resulte['message']  = __('cms.base.User successfully signed out');
+        $resulte['message']  = __('api.User successfully signed out');
         $resulte['data']     = [
             'access_token' => $token,
             'token_type'   => 'bearer',

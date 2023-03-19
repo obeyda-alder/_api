@@ -14,6 +14,11 @@ use App\Helpers\Helper;
 use App\Helpers\DataLists;
 use App\Models\Entities\MoneySafe;
 use App\Models\Entities\UnitsSafe;
+use App\Models\Entities\UnitType;
+use App\Models\Entities\UnitTypesSafe;
+use App\Models\Entities\UserUnits;
+use Illuminate\Validation\Rule;
+
 
 class UsersController extends Controller
 {
@@ -42,8 +47,8 @@ class UsersController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
@@ -51,10 +56,10 @@ class UsersController extends Controller
 
         if($type){
             try{
-                $data = User::with(['city', 'unit', 'money', 'masterAgencies', 'masterAgencies'])->whereNull('deleted_at')->findOrFail($id); //with(['city', 'mony', 'masterAgencies', 'masterAgencies.sub_agent'])->
+                $data = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->whereNull('deleted_at')->findOrFail($id);
                 $resulte              = [];
                 $resulte['success']   = true;
-                $resulte['message']   = __('cms.base.users_data');
+                $resulte['message']   = __('api.users_data');
                 $resulte['data']      = $this->getUserData($data, false);
                 return response()->json($resulte, 200);
 
@@ -82,15 +87,15 @@ class UsersController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
         $type = $this->OfType(auth()->user()->type);
 
         if($type){
-            $data = User::with(['city', 'unit','money', 'masterAgencies', 'masterAgencies'])->orderBy('id', 'DESC')->whereNull('deleted_at');
+            $data = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->orderBy('id', 'DESC')->whereNull('deleted_at');
 
             if(auth()->user()->type != 'ROOT')
             {
@@ -115,7 +120,7 @@ class UsersController extends Controller
 
             $resulte              = [];
             $resulte['success']   = true;
-            $resulte['message']   = __('cms.base.successfully');
+            $resulte['message']   = __('api.successfully');
             $resulte['count']     = $data->count();
             $resulte['data']      = $this->getUserData($data->get(), true);
             return response()->json($resulte, 200);
@@ -138,8 +143,8 @@ class UsersController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
@@ -147,12 +152,17 @@ class UsersController extends Controller
 
         if($type){
             $validator = [
-                'name'               => 'required|string|max:255',
-                'email'              => 'required|unique:users|email',
-                'password'           => 'required|string|min:6|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
-                'confirm_password'   => 'required|same:password',
-                'type'               => 'required|in:ADMIN,EMPLOYEES,CUSTOMERS,AGENCIES',
-                'image'              => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
+                'name'                  => 'required|string|max:255',
+                'email'                 => 'required|unique:users|email',
+                'password'              => 'required|string|min:6|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
+                'confirm_password'      => 'required|same:password',
+                'type'                  => 'required|in:'.implode(',', config('custom.users_type')),
+                'image'                 => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
+                "master_agent_user_id"  => ["required_if:type,==,SUB_AGENT",
+                    Rule::exists('users', 'id')->where(function ($query) use($request) {
+                        $query->where('type', 'MASTER_AGENT');
+                    })
+                ]
             ];
 
             $validator = Validator::make($request->all(), $validator);
@@ -168,16 +178,17 @@ class UsersController extends Controller
             try{
                 DB::transaction(function() use ($request) {
                     $user = User::create([
-                        'name'             => $request->name,
-                        'email'            => $request->email,
-                        'type'             => $request->type,
-                        'username'         => $request->username,
-                        'phone_number'     => $request->phone_number,
-                        'country_id'       => $request->country_id,
-                        'city_id'          => $request->city_id,
-                        'municipality_id'  => $request->municipality_id,
-                        'neighborhood_id'  => $request->neighborhood_id,
-                        'password'         => Hash::make($request->password),
+                        'name'                  => $request->name,
+                        'email'                 => $request->email,
+                        'master_agent_user_id'  => $request->master_agent_user_id,
+                        'type'                  => $request->type,
+                        'username'              => $request->username,
+                        'phone_number'          => $request->phone_number,
+                        'country_id'            => $request->country_id,
+                        'city_id'               => $request->city_id,
+                        'municipality_id'       => $request->municipality_id,
+                        'neighborhood_id'       => $request->neighborhood_id,
+                        'password'              => Hash::make($request->password),
                     ]);
 
                     if($request->has('status'))
@@ -200,13 +211,26 @@ class UsersController extends Controller
                     $unit_safe          = new UnitsSafe;
                     $unit_safe->user_id = $user->id;
                     $unit_safe->save();
+
+                    $unit_type = UnitType::where('continued', $request->type)->get();
+                    foreach($unit_type as $unit){
+                        $user_unit               = new UserUnits();
+                        $user_unit->unit_type_id = $unit->id;
+                        $user_unit->user_id      = $user->id;
+                        $user_unit->save();
+
+                        $unit_type_safe                = new UnitTypesSafe;
+                        $unit_type_safe->user_units_id = $user_unit->id;
+                        $unit_type_safe->user_id       = $user->id;
+                        $unit_type_safe->save();
+                    }
                 });
             }catch (Exception $e){
                 return response()->json([
                     'success'     => false,
                     'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
+                    'title'       => __('api.error_message.title'),
+                    'description' => __('api.error_message.description'),
                     'errors'      => '['. $e->getMessage() .']'
                 ], 500);
             }
@@ -215,8 +239,8 @@ class UsersController extends Controller
         return response()->json([
             'success'     => true,
             'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
+            'title'       => __('api.success_message.title'),
+            'description' => __('api.success_message.description'),
         ], 200);
     }
     public function update(Request $request, $id)
@@ -228,8 +252,8 @@ class UsersController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
@@ -240,7 +264,7 @@ class UsersController extends Controller
                 'name'               => 'required|string|max:255',
                 'email'              => 'required|email|unique:users,id,'.$request->user_id,
                 'password'           => 'nullable|string|min:6|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
-                'type'               => 'required|in:ADMIN,EMPLOYEES,CUSTOMERS,AGENCIES',
+                'type'               => 'required|in:'.implode(',', config('custom.users_type')),
                 'image'              => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
             ];
 
@@ -293,8 +317,8 @@ class UsersController extends Controller
                 return response()->json([
                     'success'     => false,
                     'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
+                    'title'       => __('api.error_message.title'),
+                    'description' => __('api.error_message.description'),
                     'errors'      => '['. $e->getMessage() .']'
                 ], 500);
             }
@@ -303,8 +327,8 @@ class UsersController extends Controller
         return response()->json([
             'success'     => true,
             'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
+            'title'       => __('api.success_message.title'),
+            'description' => __('api.success_message.description'),
         ], 200);
     }
     public function softDelete(Request $request, $id)
@@ -316,8 +340,8 @@ class UsersController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
             return response()->json($resulte, 400);
         }
 
@@ -331,16 +355,16 @@ class UsersController extends Controller
                 return response()->json([
                     'success'     => false,
                     'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
+                    'title'       => __('api.error_message.title'),
+                    'description' => __('api.error_message.description'),
                 ], 500);
             }
 
             return response()->json([
                 'success'     => true,
                 'type'        => 'success',
-                'title'       => __('cms::base.msg.success_message.title'),
-                'description' => __('cms::base.msg.success_message.description'),
+                'title'       => __('api.success_message.title'),
+                'description' => __('api.success_message.description'),
             ], 200);
         }
     }
@@ -353,8 +377,8 @@ class UsersController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
             return response()->json($resulte, 400);
         }
 
@@ -368,16 +392,16 @@ class UsersController extends Controller
                 return response()->json([
                     'success'     => false,
                     'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
+                    'title'       => __('api.error_message.title'),
+                    'description' => __('api.error_message.description'),
                 ], 500);
             }
 
             return response()->json([
                 'success'     => true,
                 'type'        => 'success',
-                'title'       => __('cms::base.msg.success_message.title'),
-                'description' => __('cms::base.msg.success_message.description'),
+                'title'       => __('api.success_message.title'),
+                'description' => __('api.success_message.description'),
             ], 200);
         }
     }
@@ -390,8 +414,8 @@ class UsersController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
             return response()->json($resulte, 400);
         }
 
@@ -405,16 +429,16 @@ class UsersController extends Controller
                 return response()->json([
                     'success'     => false,
                     'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
+                    'title'       => __('api.error_message.title'),
+                    'description' => __('api.error_message.description'),
                 ], 500);
             }
 
             return response()->json([
                 'success'     => true,
                 'type'        => 'success',
-                'title'       => __('cms::base.msg.success_message.title'),
-                'description' => __('cms::base.msg.success_message.description'),
+                'title'       => __('api.success_message.title'),
+                'description' => __('api.success_message.description'),
             ], 200);
         }
     }

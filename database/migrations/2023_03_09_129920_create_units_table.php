@@ -6,7 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 
 class CreateUnitsTable extends Migration
 {
-    public $set_schema_table = 'units';
+    public $set_schema_table = 'unit_generation_history';
     /**
      * Run the migrations.
      *

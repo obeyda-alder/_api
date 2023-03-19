@@ -17,22 +17,9 @@ class UnitType extends Model
     protected $fillable = [
         'id',
         'type',
-        'relation_id',
-        'add_by_user_id',
+        'continued',
     ];
 
     public $timestamps = false;
 
-    public function relation()
-    {
-        return $this->hasMany(RelationsType::class, 'id', 'relation_id');
-    }
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'add_by_user_id');
-    }
-    public function unit_type_safe()
-    {
-        return $this->hasOne(UnitTypesSafe::class);
-    }
 }

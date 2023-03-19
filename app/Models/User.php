@@ -9,16 +9,20 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\AddressDetails\City;
-use App\Models\Entities\MasterAgencies;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use App\Models\Entities\MoneySafe;
+use App\Models\Entities\RelationsType;
 use App\Models\Entities\UnitsSafe;
+use App\Models\Entities\UnitType;
+use App\Models\Entities\UserUnits;
+
 class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'id',
+        'master_agent_user_id',
         'type',
         'name',
         'username',
@@ -48,47 +52,6 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
     ];
 
-    // Refrence..
-    // public $relations = [
-    //     'admin_with_employees' => [
-    //         'admin' => [
-    //             'approval',             // `الموافقة`
-    //             'independence',        // `الإستقلال`
-    //             'Central obstetrics', // `التوليد المركزي`
-    //             'editing',           // `التحرير`
-    //             'archives',         // `الأرشفة`
-    //         ],
-    //         'employees' => [
-    //             'packing',         // `التعبئة`
-    //             'loopback',       // `الاسترجاع`
-    //             'Transport',     // `النقل`
-    //         ]
-    //     ],
-    //     'employees_with_master_agent' => [
-    //         'employees' => [
-    //             'approval',       // `الموافقة`
-    //             'packing',       // `التعبئة`
-    //         ],
-    //         'master_agent' => [
-    //             'editing',         // `التحرير`
-    //             'loopback',       // `الاسترجاع`
-    //             'barter',        // `المقايضة`
-    //         ],
-    //     ],
-    //     'master_agent_with_sub_agent' => [
-    //         'master_agent' => [
-    //             'approval',         // `الموافقة`
-    //             'packing',         // `التعبئة`
-    //         ],
-    //         'sub_agent' => [
-    //             'editing',         // `التحرير`
-    //             'loopback',       // `الاسترجاع`
-    //             'barter',        // `المقايضة`
-    //         ],
-    //     ],
-    // ];
-
-
     public function isApproved()
     {
         if( !in_array( $this->type,  config('custom.users_type') ) )
@@ -99,53 +62,35 @@ class User extends Authenticatable implements JWTSubject
     public function isRegistered()
     {
         return true;
-        return $this->registered != 0;
+        // add actions if not registered...
     }
     public function isVerified()
     {
         if( !in_array( $this->type, config('custom.users_type') ) )
             return false;
 
-        // if( static::$availableTypes[ $this->type ]['require_activation'] )
-        // {
-        //     return $this->verification_code == 'VERIFIED';
-        // }
         return true;
     }
-    public function scopeNotRegistered( $query )
-    {
-        return $query->whereNull('email');
-    }
-
     public function scopeThatActive( $query )
     {
         return $query->where(function ($q) {
             $q->where('status', 'ACTIVE');
         });
     }
-
     public function scopeThatVerified( $query )
     {
         return $query->where(function ($q) {
             $q->where('verification_code', 'VERIFIED');
         });
     }
-
     public function scopeOfType( $query, $type )
     {
-        // if( !array_key_exists( "{$type}", static::$availableTypes ) )
-        //     return $query->where('id', 0);
-
         return $query->where(function ($q) use ( $type ) {
             $q->where('type', "{$type}");
         });
     }
-
     public function scopeNotOfType( $query, $type )
     {
-        // if( !array_key_exists( "{$type}", static::$availableTypes ) )
-        //     return $query->where('id', 0);
-
         return $query->where(function ($q) use ( $type ) {
             $q->where('type', '!=', "{$type}");
         });
@@ -162,9 +107,17 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasOne(UnitsSafe::class, 'user_id', 'id');
     }
-    public function masterAgencies()
+    public function actions()
     {
-        return $this->hasMany(MasterAgencies::class, 'user_id', 'id');
+        return $this->hasMany(RelationsType::class, 'user_type', 'type');
+    }
+    public function type_unit_type()
+    {
+        return $this->hasMany(UnitType::class, 'continued', 'type');
+    }
+    public function user_units()
+    {
+        return $this->hasMany(UserUnits::class, 'user_id', 'id');
     }
     public function getJWTIdentifier()
     {

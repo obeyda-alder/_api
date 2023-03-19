@@ -23,13 +23,13 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
     });
 
     Route::group(['prefix' => 'auth', 'namespace' => 'CmsApi\Auth'], function () {
-        Route::post('login', 'AuthController@login')->name('cms::login');
+        Route::post('login', 'AuthController@login');
         Route::post('refresh', 'AuthController@refresh');
         Route::post('register', 'AuthController@register');
         Route::post('logout', 'AuthController@logout');
     });
 
-    Route::group(['middleware' => 'ofType:ROOT,ADMIN,EMPLOYEES,AGENCIES'], function ($router) {
+    Route::group(['middleware' => 'ofType:ROOT,ADMIN,EMPLOYEE'], function ($router) {
 
         Route::group(['prefix' => 'users/u/', 'namespace' => 'CmsApi\Users'], function(){
             Route::get('edit/{id}', 'UsersController@UserData');
@@ -79,15 +79,6 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::post('restore/{id}', 'CategoriesController@restore');
         });
 
-        Route::group(['prefix' => 'agencies', 'namespace' => 'CmsApi\Agencies'], function(){
-            Route::get('/{type}', 'AgenciesController@index');
-            Route::post('create/{type}', 'AgenciesController@create');
-            Route::post('update/{id}/{type}', 'AgenciesController@update');
-            Route::post('soft_delete/{id}/{type}', 'AgenciesController@softDelete');
-            Route::post('delete/{id}/{type}', 'AgenciesController@delete');
-            Route::post('restore/{id}/{type}', 'AgenciesController@restore');
-        });
-
         Route::group(['prefix' => 'transaction_type', 'namespace' => 'CmsApi\Units'], function(){
             Route::get('', 'TransactionTypeController@index');
             Route::post('create', 'TransactionTypeController@create');
@@ -108,9 +99,17 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::post('restore/{id}', 'UnitsController@restore');
         });
 
-        Route::group(['prefix' => 'make_operations', 'namespace' => 'CmsApi\Operations'], function(){
-            Route::post('{operation_type}', 'MakeOperationsController@operation');
+        Route::group(['prefix' => 'money_operations', 'namespace' => 'CmsApi\Finance'], function(){
+            Route::get('', 'FinanceController@index');
+            Route::post('batch_creation', 'FinanceController@BatchCreation');
+            Route::post('soft_delete/{id}', 'FinanceController@softDelete');
+            Route::post('delete/{id}', 'FinanceController@delete');
+            Route::post('restore/{id}', 'FinanceController@restore');
         });
 
+
+        Route::group(['middleware' => 'operations','prefix' => 'make_operations', 'namespace' => 'CmsApi\Operations'], function(){
+            Route::post('{operation_type}', 'MakeOperationsController@operation');
+        });
     });
 });

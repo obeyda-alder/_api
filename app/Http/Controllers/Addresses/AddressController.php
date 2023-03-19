@@ -28,8 +28,8 @@ class AddressController extends BaseController
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
             return response()->json($resulte, 400);
         }
 
@@ -44,8 +44,8 @@ class AddressController extends BaseController
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
@@ -60,8 +60,8 @@ class AddressController extends BaseController
             $resulte                = [];
             $resulte['success']     = false;
             $resulte['type']        = 'permission_denied';
-            $resulte['title']       = __('cms::base.permission_denied.title');
-            $resulte['description'] = __('cms::base.permission_denied.description');
+            $resulte['title']       = __('api.permission_denied.title');
+            $resulte['description'] = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
@@ -76,8 +76,8 @@ class AddressController extends BaseController
             $resulte                = [];
             $resulte['success']     = false;
             $resulte['type']        = 'permission_denied';
-            $resulte['title']       = __('cms::base.permission_denied.title');
-            $resulte['description'] = __('cms::base.permission_denied.description');
+            $resulte['title']       = __('api.permission_denied.title');
+            $resulte['description'] = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 

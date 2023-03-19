@@ -12,7 +12,7 @@ class Units extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'units';
+    protected $table = 'unit_generation_history';
 
     protected $fillable = [
         'id',

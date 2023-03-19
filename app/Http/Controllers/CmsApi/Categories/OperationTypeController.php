@@ -28,8 +28,8 @@ class OperationTypeController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
@@ -46,7 +46,7 @@ class OperationTypeController extends Controller
 
         $resulte              = [];
         $resulte['success']   = true;
-        $resulte['message']   = __('cms.base.operations_type_data');
+        $resulte['message']   = __('api.operations_type_data');
         $resulte['count']     = $data->count();
         $resulte['data']      = $data->get();
         return response()->json($resulte, 200);
@@ -59,8 +59,8 @@ class OperationTypeController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
             return response()->json($resulte, 400);
         }
 
@@ -94,8 +94,8 @@ class OperationTypeController extends Controller
                 return response()->json([
                     'success'     => false,
                     'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
+                    'title'       => __('api.error_message.title'),
+                    'description' => __('api.error_message.description'),
                     'errors'      => '['. $e->getMessage() .']'
                 ], 500);
             }
@@ -103,8 +103,8 @@ class OperationTypeController extends Controller
         return response()->json([
             'success'     => true,
             'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
+            'title'       => __('api.success_message.title'),
+            'description' => __('api.success_message.description'),
         ], 200);
     }
     public function delete(Request $request, $id)
@@ -114,8 +114,8 @@ class OperationTypeController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
@@ -127,16 +127,16 @@ class OperationTypeController extends Controller
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
-                'title'       => __('cms::base.msg.error_message.title'),
-                'description' => __('cms::base.msg.error_message.description'),
+                'title'       => __('api.error_message.title'),
+                'description' => __('api.error_message.description'),
             ], 500);
         }
 
         return response()->json([
             'success'     => true,
             'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
+            'title'       => __('api.success_message.title'),
+            'description' => __('api.success_message.description'),
         ], 200);
     }
 }

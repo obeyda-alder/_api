@@ -5,8 +5,6 @@ namespace App\Http\Controllers\CmsApi\Operations;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use App\Models\Entities\MasterAgencies;
-use App\Models\Entities\SubAgencies;
 use Exception;
 use Illuminate\Support\Facades\Validator;
 use DB;
@@ -30,36 +28,37 @@ class MakeOperationsController extends Controller
     }
     public function operation(Request $request, $operation_type)
     {
-        $user = auth()->guard('api')->user();
-
-        if(in_array($user->type, ['ADMIN','EMPLOYEES','AGENCIES']))
+        $user = auth()->guard('api')->user()->load(['unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations']);
+        if(in_array($user->type, config('custom.users_type')))
         {
             try{
-                $check =  Operations::with(['relation', 'relation.unit_Type'])->whereHas('relation', function($query) use($user) {
-                                return $query->where('user_type', $user->type);
-                            })->where('type_en', $operation_type)->exists();
-                if($check){
-                  return  $this->Operations($request, $operation_type);
-                //    $return =
-                //    if($return->getStatusCode() == 201){
-                //        return $return;
-                //    }else if($return->getStatusCode() == 200){
-                //         return  $this->generateUnit($request);
-                //    }
-                }else{
+                $operations = collect(...$user->actions->map(function ($t) {
+                    return $t->operations->map(function ($i) {
+                        return [
+                            'operation' => $i->type_en
+                        ];
+                    });
+                }));
+
+                if(!empty($operations->where('operation', $operation_type))) {
+                    $opera =  $this->TransactionsOperations($request, $operation_type, $user);
+                    if($opera->getStatusCode() != 200){
+                         return $opera;
+                    }
+                } else {
                     $resulte                 = [];
                     $resulte['success']      = false;
                     $resulte['type']         = 'operation_not_valid';
-                    $resulte['title']        = __('cms::base.operation_not_valid.title');
-                    $resulte['description']  = __('cms::base.operation_not_valid.description');
+                    $resulte['title']        = __('api.operation_not_valid.title');
+                    $resulte['description']  = __('api.operation_not_valid.description');
                     return response()->json($resulte, 400);
                 }
             }catch (Exception $e){
                 return response()->json([
                     'success'     => false,
                     'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
+                    'title'       => __('api.error_message.title'),
+                    'description' => __('api.error_message.description'),
                     'errors'      => '['. $e->getMessage() .']'
                 ], 500);
             }
@@ -67,9 +66,16 @@ class MakeOperationsController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
             return response()->json($resulte, 400);
         }
+
+        return response()->json([
+            'success'     => true,
+            'type'        => 'success',
+            'title'       => __('api.success_message.title'),
+            'description' => __('api.success_message.description'),
+        ], 200);
     }
 }

@@ -30,24 +30,24 @@ class UnitTypeController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
-        $data = UnitType::with(['unit_type_safe', 'user', 'relation'])->orderBy('id', 'DESC');
+        $data = UnitType::orderBy('id', 'DESC');
 
         if($request->has('search') && !empty($request->search))
         {
             $data->where(function($q) use ($request) {
                 $q->where('type', 'like', "%{$request->search['value']}%")
-                ->orWhere('add_by_user_id', 'like', "%{$request->search['value']}%");
+                ->orWhere('continued', 'like', "%{$request->search['value']}%");
             });
         }
 
         $resulte              = [];
         $resulte['success']   = true;
-        $resulte['message']   = __('cms.base.unit_type_data');
+        $resulte['message']   = __('api.unit_type_data');
         $resulte['count']     = $data->count();
         $resulte['data']      = $data->get();
         return response()->json($resulte, 200);
@@ -60,16 +60,17 @@ class UnitTypeController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
             return response()->json($resulte, 400);
         }
 
+        $request->merge(['type' => str_replace(' ', '_', strtoupper($request->type))]);
         $validator = [
-            'type'          => Rule::unique('unit_type')->where(function ($query) use($request) {
-                $query->where('relation_id', $request->relation_id);
+            'type' => Rule::unique('unit_type', 'type')->where(function ($query) use($request) {
+                $query->where('continued', $request->continued);
             }),
-            'relation_id'   => 'required|exists:relations_type,id'
+            'continued' => 'required|string|max:191',
         ];
 
         $validator = Validator::make($request->all(), $validator);
@@ -85,23 +86,17 @@ class UnitTypeController extends Controller
         try{
             DB::transaction(function() use ($request, $user) {
                 $unit_type = UnitType::create([
-                    'type'            => str_replace(' ', '_', strtoupper($request->type)),
-                    'relation_id'     => $request->relation_id,
-                    'add_by_user_id'  => $user->id
+                    'type'            => $request->type,
+                    'continued'       => $request->continued,
                 ]);
                 $unit_type->save();
-
-                $unit_type_safe               = new UnitTypesSafe;
-                $unit_type_safe->user_id      = $user->id;
-                $unit_type_safe->unit_type_id = $unit_type->id;
-                $unit_type_safe->save();
             });
         }catch (Exception $e){
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
-                'title'       => __('cms::base.msg.error_message.title'),
-                'description' => __('cms::base.msg.error_message.description'),
+                'title'       => __('api.error_message.title'),
+                'description' => __('api.error_message.description'),
                 'errors'      => '['. $e->getMessage() .']'
             ], 500);
         }
@@ -109,8 +104,8 @@ class UnitTypeController extends Controller
         return response()->json([
             'success'     => true,
             'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
+            'title'       => __('api.success_message.title'),
+            'description' => __('api.success_message.description'),
         ], 200);
     }
     public function delete(Request $request, $id)
@@ -120,8 +115,8 @@ class UnitTypeController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
             return response()->json($resulte, 400);
         }
 
@@ -133,16 +128,16 @@ class UnitTypeController extends Controller
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
-                'title'       => __('cms::base.msg.error_message.title'),
-                'description' => __('cms::base.msg.error_message.description'),
+                'title'       => __('api.error_message.title'),
+                'description' => __('api.error_message.description'),
             ], 500);
         }
 
         return response()->json([
             'success'     => true,
             'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
+            'title'       => __('api.success_message.title'),
+            'description' => __('api.success_message.description'),
         ], 200);
     }
 }

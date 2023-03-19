@@ -12,6 +12,7 @@ use App\Helpers\Helper;
 use App\Helpers\DataLists;
 use App\Models\User;
 use Keygen\Keygen;
+use Illuminate\Validation\Rule;
 
 class RelationsTypeController extends Controller
 {
@@ -28,43 +29,50 @@ class RelationsTypeController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
-        $data = RelationsType::with(['user'])->orderBy('id', 'DESC');
+        $data = RelationsType::orderBy('id', 'DESC');
 
         if($request->has('search') && !empty($request->search))
         {
             $data->where(function($q) use ($request) {
                 $q->where('relation_type', 'like', "%{$request->search['value']}%")
+                ->orWhere('user_type', 'like', "%{$request->search['value']}%")
                 ->orWhere('add_by_user_id', 'like', "%{$request->search['value']}%");
             });
         }
 
         $resulte              = [];
         $resulte['success']   = true;
-        $resulte['message']   = __('cms.base.relations_type_data');
+        $resulte['message']   = __('api.relations_type_data');
         $resulte['count']     = $data->count();
         $resulte['data']      = $data->get();
         return response()->json($resulte, 200);
     }
     public function create(Request $request)
     {
-        $user = auth()->user();
+        $user = auth()->guard('api')->user();
         if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
             return response()->json($resulte, 400);
         }
 
+        $request->merge([
+            'relation_type' => str_replace(' ', '_', strtoupper($request->relation_type)),
+            'user_type' => str_replace(' ', '_', strtoupper($request->user_type))
+        ]);
         $validator = [
-            'relation_type'     => 'required|string|max:255', //|in:'. implode(',', config('custom.relation_type')),
+            'relation_type'   => ["required", "string", Rule::unique('relations_type', 'relation_type')->where(function ($query) use($request) {
+                $query->where('user_type', $request->user_type);
+            })],
             'user_type'         => 'required|string|max:255'
         ];
 
@@ -81,8 +89,8 @@ class RelationsTypeController extends Controller
             try{
                 DB::transaction(function() use ($request, $user) {
                     $operation = RelationsType::create([
-                        'relation_type'    => str_replace(' ', '_', strtoupper($request->relation_type)),
-                        'user_type'        => str_replace(' ', '_', strtoupper($request->user_type)),
+                        'relation_type'    => $request->relation_type,
+                        'user_type'        => $request->user_type,
                         'add_by_user_id'  => $user->id
                     ]);
                     $operation->save();
@@ -91,8 +99,8 @@ class RelationsTypeController extends Controller
                 return response()->json([
                     'success'     => false,
                     'type'        => 'error',
-                    'title'       => __('cms::base.msg.error_message.title'),
-                    'description' => __('cms::base.msg.error_message.description'),
+                    'title'       => __('api.error_message.title'),
+                    'description' => __('api.error_message.description'),
                     'errors'      => '['. $e->getMessage() .']'
                 ], 500);
             }
@@ -100,8 +108,8 @@ class RelationsTypeController extends Controller
         return response()->json([
             'success'     => true,
             'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
+            'title'       => __('api.success_message.title'),
+            'description' => __('api.success_message.description'),
         ], 200);
     }
     public function delete(Request $request, $id)
@@ -111,8 +119,8 @@ class RelationsTypeController extends Controller
             $resulte                 = [];
             $resulte['success']      = false;
             $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('cms::base.permission_denied.title');
-            $resulte['description']  = __('cms::base.permission_denied.description');
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
 
@@ -124,16 +132,16 @@ class RelationsTypeController extends Controller
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
-                'title'       => __('cms::base.msg.error_message.title'),
-                'description' => __('cms::base.msg.error_message.description'),
+                'title'       => __('api.error_message.title'),
+                'description' => __('api.error_message.description'),
             ], 500);
         }
 
         return response()->json([
             'success'     => true,
             'type'        => 'success',
-            'title'       => __('cms::base.msg.success_message.title'),
-            'description' => __('cms::base.msg.success_message.description'),
+            'title'       => __('api.success_message.title'),
+            'description' => __('api.success_message.description'),
         ], 200);
     }
 }

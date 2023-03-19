@@ -2,15 +2,11 @@
 
 return [
     'users_type' => [
-        'ALL',
         'ROOT',
         'ADMIN',
-        'EMPLOYEES',
-        'AGENCIES',
-        'CUSTOMERS',
+        'EMPLOYEE',
+        'MASTER_AGENT',
+        'SUB_AGENT',
+        'CUSTOMER',
     ],
-    'agencies_type' => [
-        'master_agent',
-        'sub_agent',
-    ]
 ];

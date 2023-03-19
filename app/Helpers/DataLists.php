@@ -36,11 +36,14 @@ trait DataLists {
                 $Return['municipality_id']    = $user->municipality_id;
                 $Return['neighborhood_id']    = $user->neighborhood_id;
                 $Return['registration_type']  = $user->registration_type;
-                $Return['social_id']          = $user->social_id;
-                $Return['deleted_at']         = $user->deleted_at;
                 $Return['created_at']         = $user->created_at;
                 $Return['updated_at']         = $user->updated_at;
-                $Return['use']                = $user;
+                $Return['city']               = $user->city;
+                $Return['unit']               = $user->unit;
+                $Return['money']              = $user->money;
+                $Return['user_units']         = $user->user_units;
+                $Return['type_unit_type']     = $user->type_unit_type;
+                $Return['actions']            = $user->actions;
             } else {
                 foreach($user as $key => $use)
                 {
@@ -58,11 +61,14 @@ trait DataLists {
                     $Return[$key]['municipality_id']    = $use->municipality_id;
                     $Return[$key]['neighborhood_id']    = $use->neighborhood_id;
                     $Return[$key]['registration_type']  = $use->registration_type;
-                    $Return[$key]['social_id']          = $use->social_id;
-                    $Return[$key]['deleted_at']         = $use->deleted_at;
                     $Return[$key]['created_at']         = $use->created_at;
                     $Return[$key]['updated_at']         = $use->updated_at;
-                    $Return[$key]['use']                = $use;
+                    $Return[$key]['city']               = $use->city;
+                    $Return[$key]['unit']               = $use->unit;
+                    $Return[$key]['money']              = $use->money;
+                    $Return[$key]['user_units']         = $use->user_units;
+                    $Return[$key]['type_unit_type']     = $use->type_unit_type;
+                    $Return[$key]['actions']            = $use->actions;
                 }
             }
         }

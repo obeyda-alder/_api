@@ -24,6 +24,7 @@ class CreateUsersTable extends Migration
         Schema::create($this->set_schema_table, function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->increments('id');
+            $table->unsignedInteger('master_agent_user_id')->nullable()->default(null);
             $table->string('type', 100);
             $table->string('name', 191);
             $table->string('username', 191)->nullable()->default(null);
@@ -47,6 +48,7 @@ class CreateUsersTable extends Migration
             $table->nullableTimestamps();
 
 
+            $table->index(["master_agent_user_id"], 'master_agent_id_dhu_ud');
             $table->index(["country_id"], 'users_country_id_index');
             $table->index(["city_id"], 'users_city_id_index');
             $table->unique(["username"], 'users_username_unique');
@@ -54,6 +56,10 @@ class CreateUsersTable extends Migration
             $table->unique(["email"], 'users_email_unique');
             $table->foreign('city_id', 'users_city_id_index')->references('id')->on('cities')->onDelete('set null')->onUpdate('restrict');
             $table->foreign('country_id', 'users_country_id_index')->references('id')->on('countries')->onDelete('set null')->onUpdate('restrict');
+        });
+
+        Schema::table($this->set_schema_table ,function (Blueprint $table){
+            $table->foreign('master_agent_user_id')->references('id')->on($this->set_schema_table)->onDelete('set null')->onUpdate('restrict');
         });
     }
 
