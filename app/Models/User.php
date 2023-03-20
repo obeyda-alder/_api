@@ -15,6 +15,7 @@ use App\Models\Entities\RelationsType;
 use App\Models\Entities\UnitsSafe;
 use App\Models\Entities\UnitType;
 use App\Models\Entities\UserUnits;
+use Carbon\Carbon;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -52,6 +53,12 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
     ];
 
+    public function getCreatedAtAttribute( $value ) {
+        return Carbon::parse($value)->format('d/m/Y h:i');
+    }
+    public function getUpdatedAtAttribute( $value ) {
+        return Carbon::parse($value)->format('d/m/Y h:i');
+    }
     public function isApproved()
     {
         if( !in_array( $this->type,  config('custom.users_type') ) )
@@ -127,5 +134,4 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
-
 }
