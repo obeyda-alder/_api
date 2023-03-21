@@ -49,7 +49,7 @@ class validateJWTToken
             {
                 $response['errors']['global'] = 'token_not_provided';
             }
-            return response()->json($response, 200);
+            return response()->json($response, 401);
         }
         return $next($request);
     }
