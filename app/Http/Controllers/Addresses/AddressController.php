@@ -23,7 +23,7 @@ class AddressController extends BaseController
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -39,7 +39,7 @@ class AddressController extends BaseController
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -55,7 +55,7 @@ class AddressController extends BaseController
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                = [];
             $resulte['success']     = false;
@@ -71,7 +71,7 @@ class AddressController extends BaseController
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                = [];
             $resulte['success']     = false;

@@ -36,6 +36,7 @@ trait DataLists {
                 $Return['municipality_id']    = $user->municipality_id;
                 $Return['neighborhood_id']    = $user->neighborhood_id;
                 $Return['registration_type']  = $user->registration_type;
+                $Return['deleted_at']         = $user->trashed();
                 $Return['created_at']         = $user->created_at;
                 $Return['updated_at']         = $user->updated_at;
                 $Return['city']               = $user->city;
@@ -61,6 +62,7 @@ trait DataLists {
                     $Return[$key]['municipality_id']    = $use->municipality_id;
                     $Return[$key]['neighborhood_id']    = $use->neighborhood_id;
                     $Return[$key]['registration_type']  = $use->registration_type;
+                    $Return[$key]['deleted_at']         = $use->trashed();
                     $Return[$key]['created_at']         = $use->created_at;
                     $Return[$key]['updated_at']         = $use->updated_at;
                     $Return[$key]['city']               = $use->city;

@@ -25,7 +25,7 @@ class UnitTypeController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -40,8 +40,8 @@ class UnitTypeController extends Controller
         if($request->has('search') && !empty($request->search))
         {
             $data->where(function($q) use ($request) {
-                $q->where('type', 'like', "%{$request->search['value']}%")
-                ->orWhere('continued', 'like', "%{$request->search['value']}%");
+                $q->where('type', 'like', "%{$request->search}%")
+                ->orWhere('continued', 'like', "%{$request->search}%");
             });
         }
 
@@ -54,8 +54,8 @@ class UnitTypeController extends Controller
     }
     public function create(Request $request)
     {
-        $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        $user = auth()->guard('api')->user();
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -110,7 +110,7 @@ class UnitTypeController extends Controller
     }
     public function delete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;

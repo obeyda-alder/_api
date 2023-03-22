@@ -42,7 +42,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -52,7 +52,7 @@ class UsersController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $type = $this->OfType(auth()->user()->type);
+        $type = $this->OfType(auth()->guard('api')->user()->type);
 
         if($type){
             try{
@@ -82,7 +82,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -92,24 +92,24 @@ class UsersController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $type = $this->OfType(auth()->user()->type);
+        $type = $this->OfType(auth()->guard('api')->user()->type);
 
         if($type){
-            $data = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->orderBy('id', 'DESC')->whereNull('deleted_at');
+            $data = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->orderBy('id', 'DESC');
 
-            if(auth()->user()->type != 'ROOT')
+            if($type != 'ROOT')
             {
                 $data->where('type', '!=','ROOT');
             }else{
                 $data->withTrashed();
             }
 
-            if($request->has('search') && !empty($request->search))
+            if($request->has('search') && !is_null($request->search))
             {
                 $data->where(function($q) use ($request) {
-                    $q->where('name', 'like', "%{$request->search['value']}%")
-                    ->orWhere('email', 'like', "%{$request->search['value']}%")
-                    ->orWhere('type', 'like', "%{$request->search['value']}%");
+                    $q->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%")
+                    ->orWhere('type', 'like', "%{$request->search}%");
                 });
             }
 
@@ -138,7 +138,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -148,7 +148,7 @@ class UsersController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $type = $this->OfType(auth()->user()->type);
+        $type = $this->OfType(auth()->guard('api')->user()->type);
 
         if($type){
             $validator = [
@@ -157,7 +157,7 @@ class UsersController extends Controller
                 'password'              => 'required|string|min:6|regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[!$#%]).*$/',
                 'confirm_password'      => 'required|same:password',
                 'type'                  => 'required|in:'.implode(',', config('custom.users_type')),
-                'image'                 => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
+                // 'image'                 => 'sometimes|image|mimes:jpg,jpeg,png,gif,svg|max:2048',
                 "master_agent_user_id"  => ["required_if:type,==,SUB_AGENT",
                     Rule::exists('users', 'id')->where(function ($query) use($request) {
                         $query->where('type', 'MASTER_AGENT');
@@ -168,11 +168,13 @@ class UsersController extends Controller
             $validator = Validator::make($request->all(), $validator);
 
             if ($validator->fails()) {
-                $resulte              = [];
-                $resulte['success']   = false;
-                $resulte['type']      = 'validations_error';
-                $resulte['errors']     = $validator->errors();
-                return response()->json($resulte, 400);
+                $resulte                 = [];
+                $resulte['success']      = false;
+                $resulte['type']         = 'error';
+                $resulte['title']        = __('api.error_message.title');
+                $resulte['description']  = __('api.error_message.description');
+                $resulte['errors']       = $validator->errors();
+                return response()->json($resulte, 201);
             }
 
             try{
@@ -247,7 +249,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -257,7 +259,7 @@ class UsersController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $type = $this->OfType(auth()->user()->type);
+        $type = $this->OfType(auth()->guard('api')->user()->type);
 
         if($type){
             $validator = [
@@ -335,7 +337,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -345,7 +347,7 @@ class UsersController extends Controller
             return response()->json($resulte, 400);
         }
 
-        $type = $this->OfType(auth()->user()->type);
+        $type = $this->OfType(auth()->guard('api')->user()->type);
 
         if($type){
             $user = User::withTrashed()->find($id);
@@ -372,7 +374,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -382,7 +384,7 @@ class UsersController extends Controller
             return response()->json($resulte, 400);
         }
 
-        $type = $this->OfType(auth()->user()->type);
+        $type = $this->OfType(auth()->guard('api')->user()->type);
 
         if($type){
             $user = User::withTrashed()->find($id);
@@ -409,7 +411,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -419,7 +421,7 @@ class UsersController extends Controller
             return response()->json($resulte, 400);
         }
 
-        $type = $this->OfType(auth()->user()->type);
+        $type = $this->OfType(auth()->guard('api')->user()->type);
 
         if($type){
             $user = User::withTrashed()->find($id);
@@ -441,5 +443,9 @@ class UsersController extends Controller
                 'description' => __('api.success_message.description'),
             ], 200);
         }
+    }
+    public function default($file)
+    {
+        return $this->getImageDefaultByType($file);
     }
 }

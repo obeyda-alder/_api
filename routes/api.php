@@ -39,6 +39,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::post('soft_delete/{id}', 'UsersController@softDelete');
             Route::post('delete/{id}', 'UsersController@delete');
             Route::post('restore/{id}', 'UsersController@restore');
+            Route::get('default/{file}', 'UsersController@default');
         });
 
         Route::group(['prefix' => 'addresses', 'namespace' => 'Addresses'], function(){

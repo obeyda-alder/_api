@@ -34,7 +34,7 @@ class CategoriesController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -49,9 +49,9 @@ class CategoriesController extends Controller
         if($request->has('search') && !empty($request->search))
         {
             $data->where(function($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search['value']}%")
-                ->orWhere('code', 'like', "%{$request->search['value']}%")
-                ->orWhere('status', 'like', "%{$request->search['value']}%");
+                $q->where('name', 'like', "%{$request->search}%")
+                ->orWhere('code', 'like', "%{$request->search}%")
+                ->orWhere('status', 'like', "%{$request->search}%");
             });
         }
 
@@ -65,7 +65,7 @@ class CategoriesController extends Controller
     public function create(Request $request)
     {
         $user = auth()->guard('api')->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -130,8 +130,8 @@ class CategoriesController extends Controller
     }
     public function update(Request $request, $id)
     {
-        $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        $user = auth()->guard('api')->user();
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -191,7 +191,7 @@ class CategoriesController extends Controller
     }
     public function softDelete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             return response()->json([
                 'success'     => false,
@@ -223,7 +223,7 @@ class CategoriesController extends Controller
     }
     public function delete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             return response()->json([
                 'success'     => false,
@@ -255,7 +255,7 @@ class CategoriesController extends Controller
     }
     public function restore(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             return response()->json([
                 'success'     => false,

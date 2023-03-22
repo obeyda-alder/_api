@@ -16,7 +16,7 @@ trait Helper {
     {
         $Country = Country::with('Cities')->orderBy('name_'.$locale, 'ASC');
 
-        if($request->has('id')){
+        if($request->has('id') && !is_null($request->id)){
             $Country->where('id', $request->id);
         }
 
@@ -26,7 +26,7 @@ trait Helper {
     {
         $City =  City::with('country')->orderBy('name_'.$locale, 'ASC');
 
-        if($request->has('country_id')){
+        if($request->has('country_id') && !is_null($request->country_id)){
             $City->where('country_id', $request->country_id);
         }
 
@@ -36,7 +36,7 @@ trait Helper {
     {
         $Municipality = Municipality::with('city')->orderBy('name_'.$locale, 'ASC');
 
-        if($request->has('city_id')){
+        if($request->has('city_id') && !is_null($request->city_id)){
             $Municipality->where('city_id', $request->city_id);
         }
 
@@ -45,7 +45,7 @@ trait Helper {
     }
     public function getNeighborhood($request, $locale = 'ar')
     {
-        if($request->has('municipality_id')){
+        if($request->has('municipality_id') && !is_null($request->municipality_id)){
             $municipality = Municipality::findOrFail($request->municipality_id);
             $neighborhoods = Neighborhood::where('neighborhood_municipality_key', $municipality->municipality_key)
                 ->with('municipality')->orderBy('name_'.$locale, 'ASC');

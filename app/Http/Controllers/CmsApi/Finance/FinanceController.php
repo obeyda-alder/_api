@@ -36,7 +36,7 @@ class FinanceController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -51,9 +51,9 @@ class FinanceController extends Controller
         if($request->has('search') && !empty($request->search))
         {
             $money->where(function($q) use ($request) {
-                $q->where('money_code', 'like', "%{$request->search['value']}%")
-                ->orWhere('amount', 'like', "%{$request->search['value']}%")
-                ->orWhere('status', 'like', "%{$request->search['value']}%");
+                $q->where('money_code', 'like', "%{$request->search}%")
+                ->orWhere('amount', 'like', "%{$request->search}%")
+                ->orWhere('status', 'like', "%{$request->search}%");
             });
         }
 
@@ -129,7 +129,7 @@ class FinanceController extends Controller
     }
     public function softDelete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             return response()->json([
                 'success'     => false,
@@ -161,7 +161,7 @@ class FinanceController extends Controller
     }
     public function delete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             return response()->json([
                 'success'     => false,
@@ -193,7 +193,7 @@ class FinanceController extends Controller
     }
     public function restore(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             return response()->json([
                 'success'     => false,

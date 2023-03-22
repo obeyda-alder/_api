@@ -37,7 +37,7 @@ class AuthController extends Controller
             return response()->json($resulte, 401);
         }
 
-        if(auth()->user()->status != 'ACTIVE') {
+        if(auth()->guard('api')->user()->status != 'ACTIVE') {
             $resulte             = [];
             $resulte['success']  = false;
             $resulte['message']  = __('api.somthing_rowng');
@@ -94,7 +94,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type'   => 'bearer',
             'expires_in'   => auth()->factory()->getTTL() * 60,
-            'user'         => auth()->user()
+            'user'         => auth()->guard('api')->user()
         ];
         return response()->json($resulte, 200);
     }

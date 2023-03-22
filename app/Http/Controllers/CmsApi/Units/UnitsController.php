@@ -34,7 +34,7 @@ class UnitsController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -49,9 +49,9 @@ class UnitsController extends Controller
         if($request->has('search') && !empty($request->search))
         {
             $data->where(function($q) use ($request) {
-                $q->where('unit_code', 'like', "%{$request->search['value']}%")
-                ->orWhere('unit_value', 'like', "%{$request->search['value']}%")
-                ->orWhere('status', 'like', "%{$request->search['value']}%");
+                $q->where('unit_code', 'like', "%{$request->search}%")
+                ->orWhere('unit_value', 'like', "%{$request->search}%")
+                ->orWhere('status', 'like', "%{$request->search}%");
             });
         }
 
@@ -64,9 +64,9 @@ class UnitsController extends Controller
     }
     public function generate(Request $request)
     {
-        $user = auth()->user();
+        $user = auth()->guard('api')->user();
 
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -124,7 +124,7 @@ class UnitsController extends Controller
     }
     public function softDelete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             return response()->json([
                 'success'     => false,
@@ -156,7 +156,7 @@ class UnitsController extends Controller
     }
     public function delete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             return response()->json([
                 'success'     => false,
@@ -188,7 +188,7 @@ class UnitsController extends Controller
     }
     public function restore(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             return response()->json([
                 'success'     => false,

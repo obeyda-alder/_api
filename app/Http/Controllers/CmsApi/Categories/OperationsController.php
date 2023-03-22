@@ -24,7 +24,7 @@ class OperationsController extends Controller
     }
     public function index(Request $request)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -39,9 +39,9 @@ class OperationsController extends Controller
         if($request->has('search') && !empty($request->search))
         {
             $data->where(function($q) use ($request) {
-                $q->where('type_en', 'like', "%{$request->search['value']}%")
-                ->orWhere('type_ar', 'like', "%{$request->search['value']}%")
-                ->orWhere('add_by_user_id', 'like', "%{$request->search['value']}%");
+                $q->where('type_en', 'like', "%{$request->search}%")
+                ->orWhere('type_ar', 'like', "%{$request->search}%")
+                ->orWhere('add_by_user_id', 'like', "%{$request->search}%");
             });
         }
 
@@ -54,8 +54,8 @@ class OperationsController extends Controller
     }
     public function create(Request $request)
     {
-        $user = auth()->user();
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        $user = auth()->guard('api')->user();
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -112,7 +112,7 @@ class OperationsController extends Controller
     }
     public function delete(Request $request, $id)
     {
-        if(!in_array(auth()->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
             $resulte                 = [];
             $resulte['success']      = false;
