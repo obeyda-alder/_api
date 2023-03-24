@@ -32,22 +32,23 @@ trait Transactions {
     }
     public function TransactionsOperations($request , $type,  $user)
     {
-        $UNIT_NAME = $request->get('UNIT_NAME');
-        $unit_type_id = null;
-        // dd($UNIT_NAME, $type, $user->type_unit_type->where('type', $UNIT_NAME)->first()->id);
+        $request->merge([
+            'FROM_UNIT_NAME' => $request->get('FROM_UNIT_NAME'),
+            'TO_UNIT_NAME'   => $request->get('TO_UNIT_NAME'),
+        ]);
+
         switch($type){
             case "CENTRAL_OBSTETRICS":
-                $unit_type_id = $user->type_unit_type->where('type', $UNIT_NAME)->first()->id;
-                return $this->generateUnit($request, $user, $unit_type_id);
+                return $this->generateUnit($request, $user, $type);
                 break;
             case "INDEPENDENCE":
-                return $this->independenceUnit($request, $user);
+                return $this->independenceUnit($request, $user, $type);
                 break;
             default:
                 return false;
         }
     }
-    public function generateUnit($request, $user, $unit_type_id)
+    public function generateUnit($request, $user, $type)
     {
         if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
@@ -69,14 +70,15 @@ trait Transactions {
         if ($validator->fails()) {
             $resulte                  = [];
             $resulte['success']       = false;
-            $resulte['type']          = 'validations_error';
+            $resulte['type']          = 'error';
             $resulte['errors']        = $validator->errors();
             return response()->json($resulte, 400);
         }
 
 
         try{
-            \DB::transaction(function() use ($request, $user, $unit_type_id) {
+            \DB::transaction(function() use ($request, $user, $type) {
+                $unit_type_id = $user->type_unit_type->where('type', $request->FROM_UNIT_NAME)->first()->id;
                 $data                   = new units;
                 $data->unit_code        = $this->generateCode(14, 'UN-');
                 $data->unit_type_id     = $unit_type_id;
@@ -91,16 +93,7 @@ trait Transactions {
                 $user->user_units->where('unit_type_id', $unit_type_id)->first()
                    ->unit_type_safe->first()->increment('unit_type_count', $request->unit_value);
 
-
-                $trans = MoneyHistory::create([
-                    'money_code'     => $this->generateCode(14, 'MO-'),
-                    'transfer_type'  => "GENERATE UNITS",
-                    'amount'         => $request->price,
-                    'to_user_id'     => $user->id,
-                    'from_user_id'   => $user->id,
-                    'status'         => "ACTIVE",
-                ]);
-                $trans->save();
+                $this->mony_history($request->price, $user->id, $user->id, $type);
             });
         }catch (Exception $e){
             return response()->json([
@@ -119,7 +112,7 @@ trait Transactions {
             'description' => __('api.success_message.description'),
         ], 200);
     }
-    public function independenceUnit($request, $user)
+    public function independenceUnit($request, $user, $type)
     {
         if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
         {
@@ -132,10 +125,9 @@ trait Transactions {
         }
 
         $validator = [
-            'from_unit_type_id' => 'required|exists:unit_type,id',
-            'to_unit_type_id'   => 'required|exists:unit_type,id',
-            'to_user_id'        => ['required', Rule::exists('users', 'id')->where('type', 'EMPLOYEE')],
-            'unit_value'        => 'required|min:0',
+            'to_user_id'   => ['required', Rule::exists('users', 'id')->where('type', 'EMPLOYEE')],
+            'unit_value'   => 'required|min:0',
+            'price'        => 'required|min:0',
         ];
 
         $validator = Validator::make($request->all(), $validator);
@@ -143,25 +135,32 @@ trait Transactions {
         if ($validator->fails()) {
             $resulte                  = [];
             $resulte['success']       = false;
-            $resulte['type']          = 'validations_error';
+            $resulte['type']          = 'error';
             $resulte['errors']        = $validator->errors();
             return response()->json($resulte, 400);
         }
 
+
         $from = $user->load(['money', 'unit']);
-        $to   = User::with(['money', 'unit'])->find($request->to_user_id);
-
+        $to   = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->find($request->to_user_id);
         if($from->unit->unit_count >= $request->unit_value) {
+            try{
+                \DB::transaction(function() use ($request, $from, $to, $type) {
+                    $from_unit_type_id = $from->type_unit_type->where('type', $request->FROM_UNIT_NAME)->first()->id;
+                    $to_unit_type_id = $to->type_unit_type->where('type', $request->TO_UNIT_NAME)->first()->id;
 
-        try{
-            \DB::transaction(function() use ($request, $from, $to) {
                     //from => admin
-                    $this->decrement_increment_model(UnitTypesSafe::class,'decrement',$request->from_unit_type_id, null, $request->unit_value);
-                    $this->decrement_increment_model(UnitsSafe::class,'decrement', null, $from->id, $request->unit_value);
+                    $from->money()->increment('amount', $request->price);
+                    $from->unit()->decrement('unit_count', $request->unit_value);
+                    $from->user_units->where('unit_type_id', $from_unit_type_id)->first()
+                    ->unit_type_safe->first()->decrement('unit_type_count', $request->unit_value);
 
                     //to => employee
-                    $this->decrement_increment_model(UnitTypesSafe::class,'increment',$request->to_unit_type_id, null, $request->unit_value);
-                    $this->decrement_increment_model(UnitsSafe::class,'increment', null, $to->id, $request->unit_value);
+                    $to->money()->increment('amount', $request->price);
+                    $to->unit()->decrement('unit_count', $request->unit_value);
+                    $to->user_units->where('unit_type_id', $to_unit_type_id)->first()
+                    ->unit_type_safe->first()->decrement('unit_type_count', $request->unit_value);
+                    $this->mony_history($request->price, $to->id, $from->id, $type);
                 });
             }catch (Exception $e){
                 return response()->json([
@@ -187,5 +186,17 @@ trait Transactions {
             'title'       => __('api.success_message.title'),
             'description' => __('api.success_message.description'),
         ], 200);
+    }
+    public function mony_history($price, $to, $from, $type)
+    {
+        $trans = MoneyHistory::create([
+            'money_code'     => $this->generateCode(14, 'MO-'),
+            'transfer_type'  => $type,
+            'amount'         => $price,
+            'to_user_id'     => $to,
+            'from_user_id'   => $from,
+            'status'         => "ACTIVE",
+        ]);
+        $trans->save();
     }
 }

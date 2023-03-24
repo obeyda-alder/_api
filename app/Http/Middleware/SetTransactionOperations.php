@@ -11,20 +11,20 @@ class SetTransactionOperations
     {
         // Determine the type of units through the process ...
         $operation_type = $request->operation_type;
-        $units_name = null;
+        $from_units_name = null;
+        $to_units_name = null;
 
         if ($operation_type == 'CENTRAL_OBSTETRICS') {
-            $units_name = 'GENERATED_UNIT';
+            $from_units_name = 'GENERATED_UNIT';
         } elseif ($operation_type == 'INDEPENDENCE') {
-            $units_name = [
-                'from' => 'GENERATED_UNIT',
-                'to'   => 'THE_UNIT_IS_INDEPENDENT',
-            ];
+            $from_units_name = 'GENERATED_UNIT';
+            $to_units_name   = 'THE_UNIT_IS_INDEPENDENT';
         } elseif ($operation_type == 'withdrawal') {
             $units_name = 'expense';
         }
 
-        $request->attributes->set('UNIT_NAME', $units_name);
+        $request->attributes->set('FROM_UNIT_NAME', $from_units_name);
+        $request->attributes->set('TO_UNIT_NAME', $to_units_name);
         return $next($request);
     }
 }

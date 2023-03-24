@@ -82,15 +82,15 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
-        {
-            $resulte                 = [];
-            $resulte['success']      = false;
-            $resulte['type']         = 'permission_denied';
-            $resulte['title']        = __('api.permission_denied.title');
-            $resulte['description']  = __('api.permission_denied.description');
-             return response()->json($resulte, 400);
-        }
+        // if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
+        // {
+        //     $resulte                 = [];
+        //     $resulte['success']      = false;
+        //     $resulte['type']         = 'permission_denied';
+        //     $resulte['title']        = __('api.permission_denied.title');
+        //     $resulte['description']  = __('api.permission_denied.description');
+        //      return response()->json($resulte, 400);
+        // }
 
         $type = $this->OfType(auth()->guard('api')->user()->type);
 
