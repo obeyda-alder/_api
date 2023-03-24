@@ -95,12 +95,10 @@ class UsersController extends Controller
         $type = $this->OfType(auth()->guard('api')->user()->type);
 
         if($type){
-            $data = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->orderBy('id', 'DESC');
+            $data = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->where('type', '!=','ROOT')->orderBy('id', 'DESC');
 
-            if($type != 'ROOT')
+            if(in_array($type, ["ROOT", "ADMIN"]))
             {
-                $data->where('type', '!=','ROOT');
-            }else{
                 $data->withTrashed();
             }
 

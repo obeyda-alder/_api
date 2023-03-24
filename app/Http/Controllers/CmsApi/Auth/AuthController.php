@@ -17,14 +17,14 @@ class AuthController extends Controller
     public function login(Request $request)
     {
     	$validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|string|min:6',
         ]);
 
         if ($validator->fails()) {
-            $resulte              = [];
-            $resulte['success']   = false;
-            $resulte['type']      = 'validations_error';
+            $resulte               = [];
+            $resulte['success']    = false;
+            $resulte['type']       = 'validations_error';
             $resulte['errors']     = $validator->errors();
              return response()->json($resulte, 400);
         }
@@ -36,7 +36,6 @@ class AuthController extends Controller
             $resulte['data']     = '';
             return response()->json($resulte, 401);
         }
-
         if(auth()->guard('api')->user()->status != 'ACTIVE') {
             $resulte             = [];
             $resulte['success']  = false;
@@ -89,12 +88,12 @@ class AuthController extends Controller
     {
         $resulte             = [];
         $resulte['success']  = true;
-        $resulte['message']  = __('api.User successfully signed out');
+        $resulte['message']  = __('api.User successfully signed');
         $resulte['data']     = [
             'access_token' => $token,
             'token_type'   => 'bearer',
             'expires_in'   => auth()->factory()->getTTL() * 60,
-            'user'         => auth()->guard('api')->user()
+            'user'         => auth()->guard('api')->user()->load(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])
         ];
         return response()->json($resulte, 200);
     }
