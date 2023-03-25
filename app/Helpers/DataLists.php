@@ -28,7 +28,7 @@ trait DataLists {
                 $Return['username']           = $user->username;
                 $Return['phone_number']       = $user->phone_number;
                 $Return['email']              = $user->email;
-                $Return['image']              = !empty($user->image) ? $this->getImgByFileName('users', $user->image) :  $this->getImageDefaultByType('user') ;
+                $Return['image']              = $this->getImageDefaultByType('user'); //!empty($user->image) ? $this->getImgByFileName('users', $user->image) :  $this->getImageDefaultByType('user') ;
                 $Return['verification_code']  = $user->verification_code;
                 $Return['status']             = $user->status;
                 $Return['country_id']         = $user->country_id;
@@ -54,7 +54,7 @@ trait DataLists {
                     $Return[$key]['username']           = $use->username;
                     $Return[$key]['phone_number']       = $use->phone_number;
                     $Return[$key]['email']              = $use->email;
-                    $Return[$key]['image']              = !empty($use->image) ? $this->getImgByFileName('users', $use->image) :  $this->getImageDefaultByType('user') ;
+                    $Return[$key]['image']              = $this->getImageDefaultByType('user'); //!empty($use->image) ? $this->getImgByFileName('users', $use->image) :  $this->getImageDefaultByType('user') ;
                     $Return[$key]['verification_code']  = $use->verification_code;
                     $Return[$key]['status']             = $use->status;
                     $Return[$key]['country_id']         = $use->country_id;

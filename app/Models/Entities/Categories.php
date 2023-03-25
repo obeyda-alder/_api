@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Entities\OperationType;
 use App\Models\User;
+use Carbon\Carbon;
 
 class Categories extends Model
 {
@@ -22,7 +23,6 @@ class Categories extends Model
         'unit_max_limit',
         'value_in_price',
         'status',
-        'operation_type_id',
         'add_by_user_id',
         'percentage',
         'deleted_at',
@@ -30,9 +30,11 @@ class Categories extends Model
         'updated_at',
     ];
 
-    public function operationType()
-    {
-        return $this->hasMany(OperationType::class, 'id','operation_type_id');
+    public function getCreatedAtAttribute( $value ) {
+        return Carbon::parse($value)->format('d/m/Y h:i');
+    }
+    public function getUpdatedAtAttribute( $value ) {
+        return Carbon::parse($value)->format('d/m/Y h:i');
     }
     public function user()
     {

@@ -41,6 +41,8 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::post('restore/{id}', 'UsersController@restore');
             Route::get('default/{file}', 'UsersController@default');
 
+
+            Route::get('check_orders', 'UsersController@fetchOrders');
             Route::get('packing_order', 'UsersController@PackingOrder');
             Route::get('units_history', 'UsersController@UnitsHistory');
             Route::get('money_history', 'UsersController@MoneyHistory');
@@ -77,6 +79,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
         Route::group(['prefix' => 'categories', 'namespace' => 'CmsApi\Categories'], function(){
             Route::get('', 'CategoriesController@index');
             Route::get('generate_code', 'CategoriesController@generateCode');
+            Route::get('edit/{id}', 'CategoriesController@edit');
             Route::post('create', 'CategoriesController@create');
             Route::post('update/{id}', 'CategoriesController@update');
             Route::post('soft_delete/{id}', 'CategoriesController@softDelete');

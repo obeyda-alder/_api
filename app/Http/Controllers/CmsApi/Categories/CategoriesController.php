@@ -21,7 +21,7 @@ class CategoriesController extends Controller
     {
         $this->middleware('jwt.auth', ['except' => ['']]);
     }
-    public function generateCode($length = 10)
+    public function generateCode($length = 14)
     {
         $code = Keygen::numeric($length)->prefix('CA-')->generate();
 
@@ -44,7 +44,7 @@ class CategoriesController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $data = Categories::with(['operationType', 'operationType.operation', 'operationType.operation.relation'])->orderBy('id', 'DESC')->whereNull('deleted_at');
+        $data = Categories::with(['user'])->orderBy('id', 'DESC')->withTrashed();
 
         if($request->has('search') && !empty($request->search))
         {
@@ -82,7 +82,6 @@ class CategoriesController extends Controller
             'value_in_price'      => 'required|integer',
             'status'              => 'required|in:ACTIVE,NOT_ACTIVE',
             'percentage'          => 'required',
-            'operation_type_id'   => 'required|unique:categories,operation_type_id|exists:operation_type,id',
         ];
 
         $validator = Validator::make($request->all(), $validator);
@@ -105,7 +104,6 @@ class CategoriesController extends Controller
                     'unit_max_limit'     => $request->unit_max_limit,
                     'value_in_price'     => $request->value_in_price,
                     'status'             => $request->status,
-                    'operation_type_id'  => $request->operation_type_id,
                     'add_by_user_id'     => $user->id,
                     'percentage'         => $request->percentage
                 ]);
@@ -127,6 +125,34 @@ class CategoriesController extends Controller
             'title'       => __('api.success_message.title'),
             'description' => __('api.success_message.description'),
         ], 200);
+    }
+    public function edit(Request $request, $id)
+    {
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
+        {
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
+             return response()->json($resulte, 400);
+        }
+
+        try{
+            $data = Categories::with(['user'])->whereNull('deleted_at')->findOrFail($id);
+            $resulte              = [];
+            $resulte['success']   = true;
+            $resulte['message']   = __('api.category_data');
+            $resulte['data']      = $data;
+            return response()->json($resulte, 200);
+
+        }catch(Exception $e){
+            $resulte              = [];
+            $resulte['success']   = false;
+            $resulte['type']      = 'category_data_not_found';
+            $resulte['data']      = $e->getMessage();
+            return response()->json($resulte, 400);
+        }
     }
     public function update(Request $request, $id)
     {

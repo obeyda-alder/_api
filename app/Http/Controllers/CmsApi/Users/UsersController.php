@@ -536,4 +536,8 @@ class UsersController extends Controller
              return response()->json($resulte, 400);
         }
     }
+    public function fetchOrders(Request $request)
+    {
+        return PackingOrder::where('order_status', 'Unfinished')->count();
+    }
 }
