@@ -7,19 +7,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
 use App\Models\Entities\MoneySafe;
-use Carbon\Carbon;
 
-class MoneyHistory extends Model
+class UnitsMovement extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'money_history';
+    protected $table = 'units_movement';
 
     protected $fillable = [
         'id',
-        'money_code',
+        'unit_code',
         'transfer_type',
-        'amount',
+        'quantity',
         'to_user_id',
         'from_user_id',
         'status',
@@ -27,12 +26,7 @@ class MoneyHistory extends Model
         'created_at',
         'updated_at',
     ];
-    public function getCreatedAtAttribute( $value ) {
-        return Carbon::parse($value)->format('d/m/Y h:i');
-    }
-    public function getUpdatedAtAttribute( $value ) {
-        return Carbon::parse($value)->format('d/m/Y h:i');
-    }
+
     public function to_user()
     {
         return $this->belongsTo(User::class, 'to_user_id');

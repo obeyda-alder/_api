@@ -17,6 +17,7 @@ class CreateUnitTypesSafeTable extends Migration
         if (Schema::hasTable($this->set_schema_table)) return;
         Schema::create($this->set_schema_table, function (Blueprint $table) {
             $table->increments('id');
+            $table->string('unit_code', 255)->default(null)->nullable();
             $table->integer('unit_type_count')->default(0);
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('user_units_id');

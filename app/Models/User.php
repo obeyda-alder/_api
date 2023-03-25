@@ -16,10 +16,11 @@ use App\Models\Entities\UnitsSafe;
 use App\Models\Entities\UnitType;
 use App\Models\Entities\UserUnits;
 use Carbon\Carbon;
+use App\Helpers\Helper;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Helper;
 
     protected $fillable = [
         'id',
@@ -58,6 +59,9 @@ class User extends Authenticatable implements JWTSubject
     }
     public function getUpdatedAtAttribute( $value ) {
         return Carbon::parse($value)->format('d/m/Y h:i');
+    }
+    public function getImageAttribute( $value ) {
+        return is_null($value) ? $this->getImageDefaultByType('user') : $value;
     }
     public function isApproved()
     {

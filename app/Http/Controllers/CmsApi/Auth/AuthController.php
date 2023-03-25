@@ -88,7 +88,7 @@ class AuthController extends Controller
     {
         $resulte             = [];
         $resulte['success']  = true;
-        $resulte['message']  = __('api.User successfully signed');
+        $resulte['message']  = __('api.user_successfully_signed');
         $resulte['data']     = [
             'access_token' => $token,
             'token_type'   => 'bearer',

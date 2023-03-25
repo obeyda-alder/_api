@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\Route;
 Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
 
     Route::group(['middleware' => ['jwt.auth', 'ofType:ROOT'], 'prefix' => 'setting'], function () {
-        Route::get('migrate', function(){     \Artisan::call('migrate'); dd('done'); });
-        Route::get('clearcach', function(){   \Artisan::call('cache:clear');  dd('done'); });
-        Route::get('rollback', function(){    \Artisan::call('migrate:rollback', ['--step' => 1]); dd('done'); });
+        Route::get('migrate',   function(){ \Artisan::call('migrate'); dd('done'); });
+        Route::get('clearcach', function(){ \Artisan::call('cache:clear');  dd('done'); });
+        Route::get('rollback',  function(){ \Artisan::call('migrate:rollback', ['--step' => 1]); dd('done'); });
     });
 
     Route::group(['prefix' => 'auth', 'namespace' => 'CmsApi\Auth'], function () {
@@ -35,11 +35,15 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::get('edit/{id}', 'UsersController@UserData');
             Route::get('all_users_data', 'UsersController@AllUsers');
             Route::post('create', 'UsersController@store');
-            Route::post('update/{id}', 'UsersController@update');
+            Route::post('update', 'UsersController@update');
             Route::post('soft_delete/{id}', 'UsersController@softDelete');
             Route::post('delete/{id}', 'UsersController@delete');
             Route::post('restore/{id}', 'UsersController@restore');
             Route::get('default/{file}', 'UsersController@default');
+
+            Route::get('packing_order', 'UsersController@PackingOrder');
+            Route::get('units_history', 'UsersController@UnitsHistory');
+            Route::get('money_history', 'UsersController@MoneyHistory');
         });
 
         Route::group(['prefix' => 'addresses', 'namespace' => 'Addresses'], function(){
@@ -107,7 +111,6 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::post('delete/{id}', 'FinanceController@delete');
             Route::post('restore/{id}', 'FinanceController@restore');
         });
-
 
         Route::group(['middleware' => 'operations','prefix' => 'make_operations', 'namespace' => 'CmsApi\Operations'], function(){
             Route::post('{operation_type}', 'MakeOperationsController@operation');

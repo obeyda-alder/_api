@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Hash;
 use App\Helpers\Helper;
 use App\Helpers\DataLists;
 use App\Models\Entities\MoneySafe;
+use App\Models\Entities\PackingOrder;
+use App\Models\Entities\Units;
+use App\Models\Entities\MoneyHistory;
 use App\Models\Entities\UnitsSafe;
 use App\Models\Entities\UnitType;
 use App\Models\Entities\UnitTypesSafe;
@@ -42,7 +45,7 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
+        if(!in_array(auth()->guard('api')->user()->type, config('custom.users_type')))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -82,15 +85,15 @@ class UsersController extends Controller
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
-        // if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
-        // {
-        //     $resulte                 = [];
-        //     $resulte['success']      = false;
-        //     $resulte['type']         = 'permission_denied';
-        //     $resulte['title']        = __('api.permission_denied.title');
-        //     $resulte['description']  = __('api.permission_denied.description');
-        //      return response()->json($resulte, 400);
-        // }
+        if(!in_array(auth()->guard('api')->user()->type, config('custom.users_type')))
+        {
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
+             return response()->json($resulte, 400);
+        }
 
         $type = $this->OfType(auth()->guard('api')->user()->type);
 
@@ -243,7 +246,7 @@ class UsersController extends Controller
             'description' => __('api.success_message.description'),
         ], 200);
     }
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
 
@@ -279,8 +282,8 @@ class UsersController extends Controller
             }
 
             try{
-                DB::transaction(function() use ($request, $id) {
-                    $user                   = User::findOrFail($id);
+                DB::transaction(function() use ($request) {
+                    $user                   = User::findOrFail($request->user_id);
                     $user->name             = $request->name;
                     $user->email            = $request->email;
                     $user->username         = $request->username;
@@ -445,5 +448,92 @@ class UsersController extends Controller
     public function default($file)
     {
         return $this->getImageDefaultByType($file);
+    }
+    public function PackingOrder(Request $request)
+    {
+        $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
+
+        if(!in_array(auth()->guard('api')->user()->type, config('custom.users_type')))
+        {
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
+             return response()->json($resulte, 400);
+        }
+        try{
+            $data = PackingOrder::with(['order_from_user_id'])->get();
+            $resulte              = [];
+            $resulte['success']   = true;
+            $resulte['message']   = __('api.packing_order');
+            $resulte['data']      = $data;
+            return response()->json($resulte, 200);
+
+        }catch(Exception $e){
+            $resulte              = [];
+            $resulte['success']   = false;
+            $resulte['type']      = 'packing_order_not_found';
+            $resulte['data']      = $e->getMessage();
+             return response()->json($resulte, 400);
+        }
+    }
+    public function UnitsHistory(Request $request)
+    {
+        $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
+
+        if(!in_array(auth()->guard('api')->user()->type, config('custom.users_type')))
+        {
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
+             return response()->json($resulte, 400);
+        }
+        try{
+            $data = Units::with(['unit_type', 'user'])->get();
+            $resulte              = [];
+            $resulte['success']   = true;
+            $resulte['message']   = __('api.units_history');
+            $resulte['data']      = $data;
+            return response()->json($resulte, 200);
+
+        }catch(Exception $e){
+            $resulte              = [];
+            $resulte['success']   = false;
+            $resulte['type']      = 'units_history_not_found';
+            $resulte['data']      = $e->getMessage();
+             return response()->json($resulte, 400);
+        }
+    }
+    public function MoneyHistory(Request $request)
+    {
+        $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
+
+        if(!in_array(auth()->guard('api')->user()->type, config('custom.users_type')))
+        {
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
+             return response()->json($resulte, 400);
+        }
+        try{
+            $data = MoneyHistory::with(['to_user', 'from_user'])->get();
+            $resulte              = [];
+            $resulte['success']   = true;
+            $resulte['message']   = __('api.money_history');
+            $resulte['data']      = $data;
+            return response()->json($resulte, 200);
+
+        }catch(Exception $e){
+            $resulte              = [];
+            $resulte['success']   = false;
+            $resulte['type']      = 'money_history_not_found';
+            $resulte['data']      = $e->getMessage();
+             return response()->json($resulte, 400);
+        }
     }
 }

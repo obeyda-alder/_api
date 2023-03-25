@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Entities\UnitType;
 use App\Models\User;
+use Carbon\Carbon;
 
 class Units extends Model
 {
@@ -26,7 +27,12 @@ class Units extends Model
         'created_at',
         'updated_at',
     ];
-
+    public function getCreatedAtAttribute( $value ) {
+        return Carbon::parse($value)->format('d/m/Y h:i');
+    }
+    public function getUpdatedAtAttribute( $value ) {
+        return Carbon::parse($value)->format('d/m/Y h:i');
+    }
     public function unit_type()
     {
         return $this->hasMany(UnitType::class, 'id', 'unit_type_id');

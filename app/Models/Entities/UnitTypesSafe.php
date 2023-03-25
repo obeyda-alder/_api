@@ -15,6 +15,7 @@ class UnitTypesSafe extends Model
 
     protected $fillable = [
         'id',
+        'unit_code',
         'unit_type_count',
         'user_units_id',
         'user_id',
