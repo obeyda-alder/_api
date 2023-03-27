@@ -6,23 +6,32 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Entities\Operations;
 use App\Models\User;
+use App\Models\Entities\UnitType;
 
-class OperationType extends Model
+class RelationUnitTypeWithOperations extends Model
 {
     use HasFactory;
 
-    protected $table = 'operation_type';
+    protected $table = 'relation_unit_type_with_operations';
 
     protected $fillable = [
         'id',
-        'type_en',
-        'type_ar',
+        'from_unit_type_id',
+        'to_unit_type_id',
         'operation_id',
         'add_by_user_id',
     ];
 
     public $timestamps = false;
 
+    public function from_unit_type()
+    {
+        return $this->belongsTo(UnitType::class,'from_unit_type_id','id');
+    }
+    public function to_unit_type()
+    {
+        return $this->belongsTo(UnitType::class,'to_unit_type_id','id');
+    }
     public function operation()
     {
         return $this->hasMany(Operations::class, 'id','operation_id');

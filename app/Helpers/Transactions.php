@@ -147,8 +147,8 @@ trait Transactions {
 
 
         $from = $user->load(['money', 'unit']);
-        $to   = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->find($request->to_user_id);
         if($type != "PACKING"){
+            $to   = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->find($request->to_user_id);
             if($from->unit->unit_count >= $request->unit_value) {
                 try{
                     \DB::transaction(function() use ($request, $from, $to, $type) {

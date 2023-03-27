@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CmsApi\Categories;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use App\Models\Entities\OperationType;
+use App\Models\Entities\RelationUnitTypeWithOperations;
 use Exception;
 use Illuminate\Support\Facades\Validator;
 use DB;
@@ -13,7 +13,7 @@ use App\Helpers\DataLists;
 use App\Models\User;
 use Keygen\Keygen;
 
-class OperationTypeController extends Controller
+class RelationUnitTypeWithOperationsController extends Controller
 {
     use Helper, DataLists;
 
@@ -33,20 +33,20 @@ class OperationTypeController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $data = OperationType::with(['operation', 'operation.relation', 'user'])->orderBy('id', 'DESC');
+        $data = RelationUnitTypeWithOperations::with(['from_unit_type','to_unit_type','operation', 'operation.relation', 'user'])->orderBy('id', 'DESC');
 
         if($request->has('search') && !empty($request->search))
         {
             $data->where(function($q) use ($request) {
-                $q->where('type_en', 'like', "%{$request->search}%")
-                ->orWhere('type_ar', 'like', "%{$request->search}%")
-                ->orWhere('add_by_user_id', 'like', "%{$request->search}%");
+                $q->where('from_unit_type_id', 'like', "%{$request->search}%")
+                ->orWhere('to_unit_type_id', 'like', "%{$request->search}%")
+                ->orWhere('operation_id', 'like', "%{$request->search}%");
             });
         }
 
         $resulte              = [];
         $resulte['success']   = true;
-        $resulte['message']   = __('api.operations_type_data');
+        $resulte['message']   = __('api.relation_unit_type_with_operations_data');
         $resulte['count']     = $data->count();
         $resulte['data']      = $data->get();
         return response()->json($resulte, 200);
@@ -65,9 +65,9 @@ class OperationTypeController extends Controller
         }
 
         $validator = [
-            'type_en'     => 'required|string|max:255',
-            'type_ar'     => 'required|string|max:255',
-            'operation_id' => 'required|exists:operations,id',
+            'from_unit_type_id'   => 'sometimes|exists:unit_type,id',
+            'to_unit_type_id'     => 'sometimes|exists:unit_type,id',
+            'operation_id'        => 'required|exists:operations,id',
         ];
 
         $validator = Validator::make($request->all(), $validator);
@@ -82,11 +82,11 @@ class OperationTypeController extends Controller
 
             try{
                 DB::transaction(function() use ($request, $user) {
-                    $operation = OperationType::create([
-                        'type_en'         => str_replace(' ', '_', strtoupper($request->type_en)),
-                        'type_ar'         => $request->type_ar,
-                        'operation_id'    => $request->operation_id,
-                        'add_by_user_id'  => $user->id
+                    $operation = RelationUnitTypeWithOperations::create([
+                        'from_unit_type_id' => $request->from_unit_type_id,
+                        'to_unit_type_id'   => $request->to_unit_type_id,
+                        'operation_id'      => $request->operation_id,
+                        'add_by_user_id'    => $user->id
                     ]);
                     $operation->save();
                 });
@@ -119,16 +119,16 @@ class OperationTypeController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $operation = OperationType::find($id);
 
-        if(!is_null($operation)){
-            $operation->delete();
-        } else {
+        try{
+            $relation = RelationUnitTypeWithOperations::findOrFail($id);
+            $relation->delete();
+        }catch(Exception $e){
             return response()->json([
                 'success'     => false,
                 'type'        => 'error',
                 'title'       => __('api.error_message.title'),
-                'description' => __('api.error_message.description'),
+                'description' => $e->getMessage(),
             ], 500);
         }
 

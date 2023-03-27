@@ -44,7 +44,7 @@ class UnitsController extends Controller
              return response()->json($resulte, 400);
         }
 
-        $data = units::with(['unit_type', 'unit_type.relation', 'user'])->orderBy('id', 'DESC')->whereNull('deleted_at');
+        $data = units::with(['unit_type', 'user'])->orderBy('id', 'DESC')->whereNull('deleted_at');
 
         if($request->has('search') && !empty($request->search))
         {

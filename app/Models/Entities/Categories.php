@@ -5,7 +5,7 @@ namespace App\Models\Entities;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Entities\OperationType;
+use App\Models\Entities\RelationUnitTypeWithOperations;
 use App\Models\User;
 use Carbon\Carbon;
 

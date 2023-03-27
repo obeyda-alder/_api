@@ -63,10 +63,10 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
         });
 
 
-        Route::group(['prefix' => 'operation_type', 'namespace' => 'CmsApi\Categories'], function(){
-            Route::get('', 'OperationTypeController@index');
-            Route::post('create', 'OperationTypeController@create');
-            Route::post('delete/{id}', 'OperationTypeController@delete');
+        Route::group(['prefix' => 'relation_unit_type_with_operations', 'namespace' => 'CmsApi\Categories'], function(){
+            Route::get('', 'RelationUnitTypeWithOperationsController@index');
+            Route::post('create', 'RelationUnitTypeWithOperationsController@create');
+            Route::post('delete/{id}', 'RelationUnitTypeWithOperationsController@delete');
         });
 
 

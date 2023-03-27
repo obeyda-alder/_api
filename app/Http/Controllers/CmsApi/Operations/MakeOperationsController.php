@@ -15,7 +15,7 @@ use App\Models\User;
 use Illuminate\Validation\Rule;
 use App\Models\Entities\Operations;
 use App\Models\Entities\RelationsType;
-use App\Models\Entities\OperationType;
+use App\Models\Entities\RelationUnitTypeWithOperations;
 use App\Models\Entities\Categories;
 
 class MakeOperationsController extends Controller
