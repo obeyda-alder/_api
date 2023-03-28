@@ -25,7 +25,7 @@ class Operations extends Model
 
     public function relation()
     {
-        return $this->hasMany(RelationsType::class, 'id', 'relation_id');
+        return $this->belongsTo(RelationsType::class);
     }
     public function user()
     {

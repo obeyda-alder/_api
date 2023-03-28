@@ -20,7 +20,7 @@ class Country extends Model
         'currency_icon',
         'status',
     ];
-
+    public $timestamps = false;
     public function Cities()
     {
         return $this->hasMany(City::class, 'country_id', 'id');

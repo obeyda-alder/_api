@@ -81,29 +81,29 @@ class RelationsTypeController extends Controller
         if ($validator->fails()) {
             $resulte                  = [];
             $resulte['success']       = false;
-            $resulte['type']          = 'validations_error';
+            $resulte['type']          = 'error';
             $resulte['errors']        = $validator->errors();
             return response()->json($resulte, 400);
         }
 
-            try{
-                DB::transaction(function() use ($request, $user) {
-                    $operation = RelationsType::create([
-                        'relation_type'    => $request->relation_type,
-                        'user_type'        => $request->user_type,
-                        'add_by_user_id'  => $user->id
-                    ]);
-                    $operation->save();
-                });
-            }catch (Exception $e){
-                return response()->json([
-                    'success'     => false,
-                    'type'        => 'error',
-                    'title'       => __('api.error_message.title'),
-                    'description' => __('api.error_message.description'),
-                    'errors'      => '['. $e->getMessage() .']'
-                ], 500);
-            }
+        try{
+            DB::transaction(function() use ($request, $user) {
+                $operation = RelationsType::create([
+                    'relation_type'    => $request->relation_type,
+                    'user_type'        => $request->user_type,
+                    'add_by_user_id'  => $user->id
+                ]);
+                $operation->save();
+            });
+        }catch (Exception $e){
+            return response()->json([
+                'success'     => false,
+                'type'        => 'error',
+                'title'       => __('api.error_message.title'),
+                'description' => __('api.error_message.description'),
+                'errors'      => '['. $e->getMessage() .']'
+            ], 500);
+        }
 
         return response()->json([
             'success'     => true,

@@ -55,10 +55,10 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     public function getCreatedAtAttribute( $value ) {
-        return Carbon::parse($value)->format('d/m/Y h:i');
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
     }
     public function getUpdatedAtAttribute( $value ) {
-        return Carbon::parse($value)->format('d/m/Y h:i');
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
     }
     public function getImageAttribute( $value ) {
         return is_null($value) ? $this->getImageDefaultByType('user') : $value;

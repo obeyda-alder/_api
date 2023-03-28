@@ -35,13 +35,18 @@ class MakeOperationsController extends Controller
                 $operations = collect(...$user->actions->map(function ($t) {
                     return $t->operations->map(function ($i) {
                         return [
+                            'id'        => $i->id,
                             'operation' => $i->type_en
                         ];
                     });
                 }));
 
                 if(!empty($operations->where('operation', $operation_type))) {
-                    $opera =  $this->TransactionsOperations($request, $operation_type, $user);
+                    $request->merge([
+                        'operations'     => collect(...$operations->where('operation', $operation_type)),
+                        'user'           => $user,
+                    ]);
+                    $opera =  $this->TransactionsOperations($request);
                     if($opera->getStatusCode() != 200){
                          return $opera;
                     }

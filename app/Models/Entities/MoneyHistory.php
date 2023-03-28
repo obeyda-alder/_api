@@ -28,10 +28,10 @@ class MoneyHistory extends Model
         'updated_at',
     ];
     public function getCreatedAtAttribute( $value ) {
-        return Carbon::parse($value)->format('d/m/Y h:i');
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
     }
     public function getUpdatedAtAttribute( $value ) {
-        return Carbon::parse($value)->format('d/m/Y h:i');
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
     }
     public function to_user()
     {

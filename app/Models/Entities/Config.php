@@ -4,28 +4,20 @@ namespace App\Models\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Entities\RelationUnitTypeWithOperations;
-use App\Models\User;
 use Carbon\Carbon;
 
-class Categories extends Model
+class Config extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
-    protected $table = 'categories';
+    protected $table = 'ince_transfer_config';
 
     protected $fillable = [
         'id',
+        'type',
         'name',
-        'code',
-        'unit_min_limit',
-        'unit_max_limit',
-        'value_in_price',
-        'status',
-        'add_by_user_id',
-        'percentage',
-        'deleted_at',
+        'currency',
+        'price',
         'created_at',
         'updated_at',
     ];
@@ -35,9 +27,5 @@ class Categories extends Model
     }
     public function getUpdatedAtAttribute( $value ) {
         return Carbon::parse($value)->format('Y-m-d H:i:s');
-    }
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'add_by_user_id');
     }
 }

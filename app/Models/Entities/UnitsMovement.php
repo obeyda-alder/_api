@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
 use App\Models\Entities\MoneySafe;
+use Carbon\Carbon;
 
 class UnitsMovement extends Model
 {
@@ -26,6 +27,13 @@ class UnitsMovement extends Model
         'created_at',
         'updated_at',
     ];
+
+    public function getCreatedAtAttribute( $value ) {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
+    public function getUpdatedAtAttribute( $value ) {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
 
     public function to_user()
     {

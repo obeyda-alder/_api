@@ -115,7 +115,12 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
             Route::post('restore/{id}', 'FinanceController@restore');
         });
 
-        Route::group(['middleware' => 'operations','prefix' => 'make_operations', 'namespace' => 'CmsApi\Operations'], function(){
+        Route::group(['prefix' => 'config', 'namespace' => 'CmsApi'], function(){
+            Route::get('', 'ConfigController@index');
+            Route::post('create', 'ConfigController@create');
+        });
+
+        Route::group(['prefix' => 'make_operations', 'namespace' => 'CmsApi\Operations'], function(){
             Route::post('{operation_type}', 'MakeOperationsController@operation');
         });
     });

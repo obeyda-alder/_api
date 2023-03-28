@@ -27,9 +27,9 @@ class PackingOrder extends Model
         return $this->belongsTo(User::class, 'order_from_user_id');
     }
     public function getCreatedAtAttribute( $value ) {
-        return Carbon::parse($value)->format('d/m/Y h:i');
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
     }
     public function getUpdatedAtAttribute( $value ) {
-        return Carbon::parse($value)->format('d/m/Y h:i');
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
     }
 }

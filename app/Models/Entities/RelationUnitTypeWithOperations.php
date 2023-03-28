@@ -34,7 +34,7 @@ class RelationUnitTypeWithOperations extends Model
     }
     public function operation()
     {
-        return $this->hasMany(Operations::class, 'id','operation_id');
+        return $this->belongsTo(Operations::class);
     }
     public function user()
     {
