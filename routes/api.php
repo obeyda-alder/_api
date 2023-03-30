@@ -43,9 +43,11 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
 
 
             Route::get('check_orders', 'UsersController@fetchOrders');
+            Route::get('refresh_data', 'UsersController@refresh_data');
             Route::get('packing_order', 'UsersController@PackingOrder');
             Route::get('units_history', 'UsersController@UnitsHistory');
             Route::get('money_history', 'UsersController@MoneyHistory');
+            Route::get('index_movement', 'UsersController@index_movement');
         });
 
         Route::group(['prefix' => 'addresses', 'namespace' => 'Addresses'], function(){
@@ -118,6 +120,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'cms'], function ($router) {
         Route::group(['prefix' => 'config', 'namespace' => 'CmsApi'], function(){
             Route::get('', 'ConfigController@index');
             Route::post('create', 'ConfigController@create');
+            Route::post('delete/{id}', 'ConfigController@delete');
         });
 
         Route::group(['prefix' => 'make_operations', 'namespace' => 'CmsApi\Operations'], function(){

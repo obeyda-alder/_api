@@ -16,6 +16,7 @@ class Config extends Model
         'id',
         'type',
         'name',
+        'flag',
         'currency',
         'price',
         'created_at',

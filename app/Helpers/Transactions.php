@@ -16,6 +16,8 @@ use App\Models\Entities\MoneyHistory;
 use App\Models\Entities\UnitsMovement;
 use App\Models\Entities\PackingOrder;
 use \Illuminate\Support\Str;
+use App\Models\Entities\Config;
+use SebastianBergmann\CodeCoverage\Report\Xml\Unit;
 
 trait Transactions {
 
@@ -25,10 +27,10 @@ trait Transactions {
     {
         //
     }
-    public function generateCode($length = 14, $pre)
+    public function generateCode($length = 14, $pre, $money = false)
     {
         $code = Keygen::alphanum($length)->prefix($pre)->generate();
-        if(units::where('unit_code', $code)->exists())
+        if(($money && MoneyHistory::where('money_code', $code)->exists()) || (!$money && units::where('unit_code', $code)->exists()))
         {
             return $this->generateCode($length, $pre);
         }
@@ -70,7 +72,7 @@ trait Transactions {
         }
 
         $validator = [
-            'price'      => 'required|min:0',
+            'currencies' => 'required|exists:ince_transfer_config,id',
             'unit_value' => 'required|min:0',
         ];
 
@@ -87,26 +89,28 @@ trait Transactions {
         $from_unit_type_id = $request->relations->from_unit_type_id;
         try{
             \DB::transaction(function() use ($request, $user, $from_unit_type_id) {
+                $currencies = Config::findOrFail($request->currencies);
+                $price = $currencies->price * $request->unit_value;
                 $data                   = new units;
                 $data->unit_code        = $this->generateCode(14, 'UN-');
                 $data->unit_type_id     = $from_unit_type_id;
-                $data->price            = $request->price;
+                $data->price            = $price;
                 $data->unit_value       = $request->unit_value;
                 $data->add_by           = $user->id;
                 $data->status           = "ACTIVE";
                 $data->save();
 
-                $user->money()->decrement('amount', $request->price);
+                $user->money()->where('config_currency_id', $currencies->id)->decrement('amount', $price);
                 $user->unit()->increment('unit_count', $request->unit_value);
                 $unit_type = $user->user_units->where('unit_type_id', $from_unit_type_id)->first();
-                $unit_safe = $unit_type->unit_type_safe->first();
+                $unit_safe = $unit_type->unit_type_safe;
                 $unit_safe->unit_code = $data->unit_code;
                 $unit_safe->increment('unit_type_count', $request->unit_value);
                 $unit_safe->save();
 
                 $operation = $request->operations['operation'];
-                $this->mony_history($operation, $request->price, $user->id, $user->id);
-                $this->units_movement($data->unit_code, $operation, $data->unit_value, $user->id, $user->id);
+                $this->mony_history($operation, $price, $user->id, $user->id);
+                $this->units_movement($data->unit_code, $operation, $request->unit_value, $user->id, $user->id);
             });
         }catch (Exception $e){
             return response()->json([
@@ -141,7 +145,7 @@ trait Transactions {
         $validator = [
             'to_user_id'   => [Rule::requiredIf($operation != "PACKING"), Rule::exists('users', 'id')->where('type', Str::after($request->type, '_TO_'))],
             'unit_value'   => 'required|min:0',
-            'price'        => [Rule::requiredIf($operation != "PACKING"), 'min:0'],
+            'currencies'   => [Rule::requiredIf($operation != "PACKING"), Rule::exists('ince_transfer_config', 'id')],
         ];
 
         $validator = Validator::make($request->all(), $validator);
@@ -161,25 +165,29 @@ trait Transactions {
             if($from_user->unit->unit_count >= $request->unit_value) {
                 try{
                     \DB::transaction(function() use ($request, $from_user, $to_user, $operation) {
+                        $currencies = Config::findOrFail($request->currencies);
+                        $price = $currencies->price * $request->unit_value;
                         $from_unit_type_id = $request->relations->from_unit_type_id;
                         $to_unit_type_id = $request->relations->to_unit_type_id;
 
                         // from_user =>
-                        $from_user->money()->increment('amount', $request->price);
+                        $from_user->money()->where('config_currency_id', $currencies->id)->increment('amount', $price);
                         $from_user->unit()->decrement('unit_count', $request->unit_value);
                         $f_unit_type = $from_user->user_units->where('unit_type_id', $from_unit_type_id)->first();
-                        $f_unit_safe = $f_unit_type->unit_type_safe->first();
+                        $f_unit_safe = $f_unit_type->unit_type_safe;
                         $f_unit_safe->decrement('unit_type_count', $request->unit_value);
 
-                        // to_user =>
-                        $to_user->money()->increment('amount', $request->price);
-                        $to_user->unit()->decrement('unit_count', $request->unit_value);
-                        $t_unit_type = $to_user->user_units->where('unit_type_id', $to_unit_type_id)->first();
-                        $t_unit_safe = $t_unit_type->unit_type_safe->first();
-                        $t_unit_safe->decrement('unit_type_count', $request->unit_value);
 
+                        // to_user =>
+                        $to_user->money()->where('config_currency_id', $currencies->id)->decrement('amount', $price);
+                        $to_user->unit()->increment('unit_count', $request->unit_value);
+                        $t_unit_type = $to_user->user_units->where('unit_type_id', $to_unit_type_id)->first();
+                        $t_unit_safe = $t_unit_type->unit_type_safe;
+                        $t_unit_safe->unit_code = $f_unit_safe->unit_code;
+                        $t_unit_safe->increment('unit_type_count', $request->unit_value);
+                        $t_unit_safe->save();
                         // history
-                        $this->mony_history($operation, $request->price, $to_user->id, $from_user->id);
+                        $this->mony_history($operation, $price, $to_user->id, $from_user->id);
                         $this->units_movement($f_unit_safe->unit_code, $operation, $request->unit_value, $to_user->id, $from_user->id);
                     });
                 }catch (Exception $e){
@@ -218,7 +226,7 @@ trait Transactions {
     public function mony_history($transfer_type, $amount, $to_user_id, $from_user_id)
     {
         $trans = MoneyHistory::create([
-            'money_code'     => $this->generateCode(14, 'MO-'),
+            'money_code'     => $this->generateCode(14, 'MO-', true),
             'transfer_type'  => $transfer_type,
             'amount'         => $amount,
             'to_user_id'     => $to_user_id,

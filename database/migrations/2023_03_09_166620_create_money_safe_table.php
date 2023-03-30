@@ -19,7 +19,11 @@ class CreateMoneySafeTable extends Migration
             $table->increments('id');
             $table->integer('amount')->default(0);
             $table->unsignedInteger('user_id');
+            $table->unsignedInteger('config_currency_id');
             $table->string('status', 50)->default('ACTIVE')->comment('ACTIVE | NOT_ACTIVE');
+
+            $table->index(["config_currency_id"], 'config_currency_id_index');
+            $table->foreign('config_currency_id', 'config_currency_id_index')->references('id')->on('ince_transfer_config')->onDelete('cascade');
 
             $table->index(["user_id"], 'user_id_EFJa_ACXX');
             $table->foreign('user_id', 'user_id_EFJa_ACXX')->references('id')->on('users')->onDelete('cascade');

@@ -28,6 +28,6 @@ class UserUnits extends Model
     }
     public function unit_type_safe()
     {
-        return $this->hasMany(UnitTypesSafe::class);
+        return $this->hasOne(UnitTypesSafe::class);
     }
 }

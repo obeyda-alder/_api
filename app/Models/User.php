@@ -112,7 +112,7 @@ class User extends Authenticatable implements JWTSubject
     }
     public function money()
     {
-        return $this->hasOne(MoneySafe::class, 'user_id', 'id');
+        return $this->hasMany(MoneySafe::class, 'user_id', 'id');
     }
     public function unit()
     {

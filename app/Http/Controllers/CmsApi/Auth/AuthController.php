@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Exception;
 
 class AuthController extends Controller
 {
@@ -29,22 +30,30 @@ class AuthController extends Controller
              return response()->json($resulte, 400);
         }
 
-        if (! $token = auth()->attempt($validator->validated())) {
-            $resulte             = [];
-            $resulte['success']  = false;
-            $resulte['message']  = __('api.somthing_rowng');
-            $resulte['data']     = '';
-            return response()->json($resulte, 401);
-        }
-        if(auth()->guard('api')->user()->status != 'ACTIVE') {
-            $resulte             = [];
-            $resulte['success']  = false;
-            $resulte['message']  = __('api.somthing_rowng');
-            $resulte['data']     = '';
-            return response()->json($resulte, 401);
-        }
+        try{
+            if (! $token = auth()->attempt($validator->validated())) {
+                $resulte             = [];
+                $resulte['success']  = false;
+                $resulte['message']  = __('api.somthing_rowng');
+                $resulte['data']     = '';
+                return response()->json($resulte, 401);
+            }
+            if(auth()->guard('api')->user()->status != 'ACTIVE') {
+                $resulte             = [];
+                $resulte['success']  = false;
+                $resulte['message']  = __('api.somthing_rowng');
+                $resulte['data']     = '';
+                return response()->json($resulte, 401);
+            }
 
-        return $this->createNewToken($token);
+            return $this->createNewToken($token);
+        }catch(Exception $e){
+            $resulte             = [];
+            $resulte['success']  = false;
+            $resulte['message']  = __('api.somthing_rowng');
+            $resulte['error']    = $e->getMessage();
+            return response()->json($resulte, 401);
+        }
     }
     public function register(Request $request)
     {
@@ -93,7 +102,7 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type'   => 'bearer',
             'expires_in'   => auth()->factory()->getTTL() * 60,
-            'user'         => auth()->guard('api')->user()->load(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])
+            'user'         => auth()->guard('api')->user()->load(['city', 'unit', 'money', 'money.config_currency', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])
         ];
         return response()->json($resulte, 200);
     }

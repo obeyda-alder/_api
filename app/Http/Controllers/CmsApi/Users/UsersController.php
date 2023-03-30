@@ -20,8 +20,9 @@ use App\Models\Entities\UnitsSafe;
 use App\Models\Entities\UnitType;
 use App\Models\Entities\UnitTypesSafe;
 use App\Models\Entities\UserUnits;
+use App\Models\Entities\Config;
 use Illuminate\Validation\Rule;
-
+use App\Models\Entities\UnitsMovement;
 
 class UsersController extends Controller
 {
@@ -59,7 +60,7 @@ class UsersController extends Controller
 
         if($type){
             try{
-                $data = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->whereNull('deleted_at')->findOrFail($id);
+                $data = User::with(['city', 'unit', 'money', 'money.config_currency','user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->whereNull('deleted_at')->findOrFail($id);
                 $resulte              = [];
                 $resulte['success']   = true;
                 $resulte['message']   = __('api.users_data');
@@ -98,7 +99,7 @@ class UsersController extends Controller
         $type = $this->OfType(auth()->guard('api')->user()->type);
 
         if($type){
-            $data = User::with(['city', 'unit', 'money', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->where('type', '!=','ROOT')->orderBy('id', 'DESC');
+            $data = User::with(['city', 'unit', 'money', 'money.config_currency', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations'])->where('type', '!=','ROOT')->orderBy('id', 'DESC');
 
             if(in_array($type, ["ROOT", "ADMIN"]))
             {
@@ -204,12 +205,16 @@ class UsersController extends Controller
                         $path =  $this->UploadWithResizeImage($request, 'users', [[0 => 100, 1 => 100],[0 => 50, 1 => 50]]);
                         $user->image = $path;
                     }
-
                     $user->save();
 
-                    $money_safe          = new MoneySafe;
-                    $money_safe->user_id = $user->id;
-                    $money_safe->save();
+                    $config = Config::where('type', 'currencies')->get();
+                    foreach($config as $key => $value)
+                    {
+                        $money_safe                     = new MoneySafe;
+                        $money_safe->user_id            = $user->id;
+                        $money_safe->config_currency_id = $value->id;
+                        $money_safe->save();
+                    }
 
                     $unit_safe          = new UnitsSafe;
                     $unit_safe->user_id = $user->id;
@@ -223,6 +228,7 @@ class UsersController extends Controller
                         $user_unit->save();
 
                         $unit_type_safe                = new UnitTypesSafe;
+                        $unit_type_safe->unit_code     = 'new';
                         $unit_type_safe->user_units_id = $user_unit->id;
                         $unit_type_safe->user_id       = $user->id;
                         $unit_type_safe->save();
@@ -452,8 +458,8 @@ class UsersController extends Controller
     public function PackingOrder(Request $request)
     {
         $this->locale = $request->hasHeader('locale') ? $request->header('locale') : app()->getLocale();
-
-        if(!in_array(auth()->guard('api')->user()->type, config('custom.users_type')))
+        $user = auth()->guard('api')->user();
+        if(!in_array($user->type, config('custom.users_type')))
         {
             $resulte                 = [];
             $resulte['success']      = false;
@@ -462,14 +468,22 @@ class UsersController extends Controller
             $resulte['description']  = __('api.permission_denied.description');
              return response()->json($resulte, 400);
         }
-        try{
-            $data = PackingOrder::with(['order_from_user_id'])->get();
-            $resulte              = [];
-            $resulte['success']   = true;
-            $resulte['message']   = __('api.packing_order');
-            $resulte['data']      = $data;
-            return response()->json($resulte, 200);
 
+        try{
+            $data = PackingOrder::with(['order_from_user_id']);
+            if(in_array($user->type, ["ROOT", "ADMIN"])){
+                $resulte              = [];
+                $resulte['success']   = true;
+                $resulte['message']   = __('api.packing_order');
+                $resulte['data']      = $data->get();
+                return response()->json($resulte, 200);
+            }else{
+                $resulte              = [];
+                $resulte['success']   = true;
+                $resulte['message']   = __('api.packing_order');
+                $resulte['data']      = $data->where('order_from_user_id', $user->id)->get();
+                return response()->json($resulte, 200);
+            }
         }catch(Exception $e){
             $resulte              = [];
             $resulte['success']   = false;
@@ -538,6 +552,46 @@ class UsersController extends Controller
     }
     public function fetchOrders(Request $request)
     {
-        return PackingOrder::where('order_status', 'Unfinished')->count();
+        $user = auth()->guard('api')->user();
+        $order = PackingOrder::where('order_status', 'Unfinished');
+        if(in_array($user->type, ["ROOT", "ADMIN"])){
+            return $order->count();
+        }else{
+            return $order->where('order_from_user_id', $user->id)->count();
+        }
+    }
+    public function refresh_data()
+    {
+        return auth()->guard('api')->user()->load(['city', 'unit', 'money', 'money.config_currency', 'user_units', 'user_units.unit_type_safe', 'type_unit_type', 'actions', 'actions.operations']);
+    }
+    public function index_movement(Request $request)
+    {
+        if(!in_array(auth()->guard('api')->user()->type, ["ROOT", "ADMIN"]))
+        {
+            $resulte                 = [];
+            $resulte['success']      = false;
+            $resulte['type']         = 'permission_denied';
+            $resulte['title']        = __('api.permission_denied.title');
+            $resulte['description']  = __('api.permission_denied.description');
+             return response()->json($resulte, 400);
+        }
+
+        $data = UnitsMovement::with(['to_user', 'from_user'])->orderBy('id', 'DESC')->whereNull('deleted_at');
+
+        if($request->has('search') && !empty($request->search))
+        {
+            $data->where(function($q) use ($request) {
+                $q->where('unit_code', 'like', "%{$request->search}%")
+                ->orWhere('transfer_type', 'like', "%{$request->search}%")
+                ->orWhere('quantity', 'like', "%{$request->search}%");
+            });
+        }
+
+        $resulte              = [];
+        $resulte['success']   = true;
+        $resulte['message']   = __('api.units_movement_data');
+        $resulte['count']     = $data->count();
+        $resulte['data']      = $data->get();
+        return response()->json($resulte, 200);
     }
 }

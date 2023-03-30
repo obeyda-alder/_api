@@ -26,9 +26,12 @@ class CreateConfigTable extends Migration
             $table->increments('id');
             $table->string('type', 191);
             $table->string('name', 191);
+            $table->string('flag', 191);
             $table->string('currency', 50);
             $table->decimal('price', 7, 2)->default(0);
             $table->nullableTimestamps();
+
+            $table->unique(['currency']);
         });
     }
 
